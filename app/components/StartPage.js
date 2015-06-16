@@ -43,6 +43,60 @@ var resultTemplate = {
 
 };
 
+var runden = function (number) {
+    return parseFloat(number.toFixed(2))
+};
+var runden0 = function (number) {
+    return parseFloat(number.toFixed(0))
+};
+
+var hypothekendarlehen = function(input) {
+    var label = input.label;// "Creditweb - focus.de rechner 16.06.2015",
+    var years = input.laufzeit.jahre;// 20,
+    var betrag = input.betrag;// 317000,
+    var tilgung = input.tilgung;// 2.0,
+    var tilgungVerzögerungMonate = input.tilgungVerzögerungMonate || 0;
+    var sollzins = input.sollzins;// 2.47,
+    var effektivzins = input.effektivzins;// 2.50,
+    
+    var yearly = betrag * ((tilgung+sollzins)/100.0);
+    var monatsrate = runden(yearly / 12.0);
+    var restschuld = betrag;
+    
+    /*
+    for (var i=0; i < years; i++) {
+        var realYearly = monatsrate * 12.0;
+        var zinsbetrag = runden(restschuld * (sollzins/100.0));
+        var tilgungsbetrag = realYearly - zinsbetrag;
+        restschuld -= tilgungsbetrag;
+    }
+    */
+
+    /*
+     * Der Hypothekenrechner http://hypotheken.focus.de/rechner/focus/top.aspx?id=8&darstellung=0&zinsfestschreibung=20&gesamtkosten=398000&darlehen=317000&tilgung=2&plz=22337%20Hamburg&bauzustand=1&berufsgruppen=1&sondertilgungen=2 
+     * rechnet so, dass sich nach jeder Monatsrate der Betrag verringert, nicht erst nach dem Jahr.
+     * Wir machen das auch so. 
+     */
+    var monthlyValues = [];
+    for (var i=0; i < 12*years; i++) {
+        var restschuld = i ? monthlyValues[i-1].restschuld : betrag;
+        var zinsbetrag = runden(restschuld * ((sollzins/12.0)/100.0));
+        var tilgungsbetrag = i>=tilgungVerzögerungMonate? monatsrate - zinsbetrag : 0;
+        monthlyValues.push({
+            restschuld: restschuld - tilgungsbetrag,
+            tilgungsbetrag: tilgungsbetrag,
+            zinsbetrag: zinsbetrag
+        });
+    }
+    
+    return {
+        monatsrate: monatsrate,
+        restschuld: monthlyValues[monthlyValues.length - 1].restschuld,
+        monthlyValues: monthlyValues
+    };
+}
+
+
 var sparEmpfehlung = function (params) {
     var terms = params.terms;
   var kreditZinsEff = terms.kredit.effzins;
@@ -68,19 +122,53 @@ var sparEmpfehlung = function (params) {
 }
 
 
-var haspa1 = {
-  label: "Haspa 1",
-  monatsBetrag: 1000,
-  betrag: 320000,
-  kredit: {
-    effzins: 2.4,
-    laufzeit: 15
-  },
-  bauspar: {
-    effzins: 2.5,
-    sparzins: 0.1
-  }
+
+var Creditweb = {
+    label: "Creditweb - focus.de rechner 16.06.2015",
+    laufzeit: {jahre: 20},
+    startzeit: {monat: 7},
+    betrag: 317000,
+    tilgung: 2.0,
+    sollzins: 2.47,
+    
+    erwartet: {
+        monatsrate: 1180.83,
+        restschuld: 153230,
+        effektivzins: 2.50
+    }
 };
+
+var HaspaAnnu = {
+    label: "Haspa Annuitätendarlehen - Angebot vom 28.05.2015",
+    laufzeit: {jahre: 15},
+    startzeit: {monat: 6},
+    betrag: 270000,
+    tilgung: 2.0,
+    sollzins: 2.25,
+    
+    erwartet: {
+        monatsrate: 956.25,
+        restschuld: 173760.75,
+        effektivzins: 2.27
+    }
+};
+
+var HaspaKFW = {
+    label: "Haspa Annuitätendarlehen - KFW - Angebot vom 28.05.2015",
+    laufzeit: {jahre: 10},
+    startzeit: {monat: 6},
+    betrag: 50000,
+    tilgung: 2.24,
+    tilgungVerzögerungMonate: 12, // 'Freijahre' in den Bedingungen - in dieser Zeit wird nicht getilgt
+    sollzins: 1.55,
+    
+    erwartet: {
+        monatsrate: 157.92,
+        restschuld: 39190.17,
+        effektivzins: 1.56
+    }
+};
+
 
 var behaviour1 = {
   label: "Genaue Monatsrate, keine Extratilgung",
@@ -90,8 +178,26 @@ var behaviour1 = {
   yearlyExtra: 0
 };
 
-var varianten = [ {terms: haspa1, behaviour: behaviour1} ];
+var varianten = [ {terms: Creditweb, behaviour: behaviour1},
+                  {terms: HaspaAnnu, behaviour: behaviour1},
+                  {terms: HaspaKFW, behaviour: behaviour1}
+                  ];
+var DataRow = React.createClass({
+    render: function() {
+        
+        return (<tr><th>{this.props.title}</th>{_.map(this.props.variants, function(variant) {
+            var value = (typeof this.props.value === 'function') ? this.props.value(variant): this.props.value;
+            var formattedValue = (typeof this.props.formatter === 'function') ? this.props.formatter(value): value;
+            return (<td>{formattedValue}</td>);
+        }.bind(this))}</tr>);
+    }
+});
 
+var PriceFormat = function (value) {
+    return (
+      <FormattedMessage message="{total, number, eur}" total={value} />
+    );
+};
 
 var StartPage = React.createClass({
     // Note that each Page must include the IntlMixin, otherwise the i18n data
@@ -101,17 +207,13 @@ var StartPage = React.createClass({
     getInitialState: function() {
         return {data:_.map(varianten, function(variante) {
             return {
-                variante: variante,
-                data: sparEmpfehlung(variante)
+                input: variante,
+                result: hypothekendarlehen(variante.terms)
             }
         })};
     },
-    renderColumn: function (valueFkt) {
-        return _.map(this.state.data, function(variant) {
-            return (<td>{valueFkt(variant)}</td>);
-        });
-    },
     
+
     /*
      * 
  - Laufzeit
@@ -134,17 +236,20 @@ var StartPage = React.createClass({
                                   name="Nutzer" />
             </div>
             <table>
-            <tr><th>Bedingungen</th>{this.renderColumn(function(variant) {return variant.variante.terms.label;})}</tr>
-            <tr><th>Verhalten</th>{this.renderColumn(function(variant) {return variant.variante.behaviour.label;})}</tr>
-            <tr><th>Kreditbetrag</th>{this.renderColumn(function(variant) {return variant.variante.terms.betrag + " €";})}</tr>
-            <tr><th>Laufzeit</th>{this.renderColumn(function(variant) {return "TDB";})}</tr>
-            <tr><th>Restschuld</th>{this.renderColumn(function(variant) {return "TDB";})}</tr>
-            <tr><th>Renten-Auszahlung</th>{this.renderColumn(function(variant) {return "-";})}</tr>
-            <tr><th>Kosten (absolut)</th>{this.renderColumn(function(variant) {return variant.data.kreditKosten + " €";})}</tr>
-            <tr><th>Kosten (% vom getilgten)</th>{this.renderColumn(function(variant) {return "TBD";})}</tr>
-            <tr><th>Monatsrate</th>{this.renderColumn(function(variant) {return "TBD";})}</tr>
-            <tr><th>Extra-Tilgung pro Monat</th>{this.renderColumn(function(variant) {return "TBD";})}</tr>
-            <tr><th>Extra-Tilgung pro Jahr</th>{this.renderColumn(function(variant) {return "TBD";})}</tr>
+                <DataRow title="Bedingungen" variants={this.state.data} value={function(variant) {return variant.input.terms.label;}}/>
+                <DataRow title="Verhalten" variants={this.state.data} value={function(variant) {return variant.input.behaviour.label;}}/>
+                <DataRow title="Kreditbetrag" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.input.terms.betrag;}}/>
+                <DataRow title="Laufzeit (Jahre)" variants={this.state.data} value={function(variant) {return variant.input.terms.laufzeit.jahre;}}/>
+                <DataRow title="Monatsrate" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.monatsrate;}}/>
+                <DataRow title="Monatsrate (expected)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.input.terms.erwartet.monatsrate;}}/>
+                <DataRow title="Restschuld" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
+                <DataRow title="Restschuld (expected)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.input.terms.erwartet.restschuld;}}/>
+                <DataRow title="Renten-Auszahlung" variants={this.state.data} value={"-"}/>
+                <DataRow title="Kosten (absolut)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.kreditKosten;}}/>
+                <DataRow title="Kosten (% vom getilgten)" variants={this.state.data} value={"TBD"}/>
+                
+                <DataRow title="Extra-Tilgung pro Monat" variants={this.state.data} value={"TBD"}/>
+                <DataRow title="Extra-Tilgung pro Jahr" variants={this.state.data} value={"TBD"}/>
             </table>
           </div>
 	);
