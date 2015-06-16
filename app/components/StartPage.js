@@ -201,6 +201,15 @@ var DataRow = React.createClass({
     }
 });
 
+var concatTermInput = function(fkt, variant) {
+    var terms = variant.input.terms;
+    var value = fkt(terms);
+    if (value !== undefined) {
+        return value;
+    }
+    return (<div>{_.map(terms.kredite, function(terms, idx) {return (<span>{idx!=0?' | ':''}{fkt(terms)}</span>);})}</div>);
+};
+
 var PriceFormat = function (value) {
     return (
       <FormattedMessage message="{total, number, eur}" total={value} />
@@ -237,8 +246,6 @@ var StartPage = React.createClass({
  
      */
     
-    //<DataRow title="Monatsrate (expected)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.input.terms.erwartet.monatsrate;}}/>
-    // <DataRow title="Restschuld (expected)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.input.terms.erwartet.restschuld;}}/>
     render: function () {
 	return (
           <div className="container">
@@ -250,17 +257,15 @@ var StartPage = React.createClass({
                 <DataRow title="Bedingungen" variants={this.state.data} value={function(variant) {return variant.input.terms.label;}}/>
                 <DataRow title="Verhalten" variants={this.state.data} value={function(variant) {return variant.input.behaviour.label;}}/>
                 <DataRow title="Kreditbetrag" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag;}}/>
-                <DataRow title="Laufzeit (Jahre)" variants={this.state.data} value={function(variant) {var terms = variant.input.terms; return terms.laufzeit ? terms.laufzeit: _.reduce(terms.kredite, function(memo, kredit) {return kredit.laufzeit.jahre + ", " + memo;}, "");}}/>
+                <DataRow title="Laufzeit (Jahre)" variants={this.state.data} value={concatTermInput.bind(this, function(terms) {return terms.laufzeit? terms.laufzeit.jahre : undefined})}/>
                 <DataRow title="Monatsrate" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.monatsrate;}}/>
-                
+                <DataRow title="Monatsrate (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.monatsrate) : undefined;})}/>
                 <DataRow title="Restschuld" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
+                <DataRow title="Restschuld (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.restschuld) : undefined;})}/>
                 
-                <DataRow title="Renten-Auszahlung" variants={this.state.data} value={"-"}/>
                 <DataRow title="Kosten (absolut)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.kosten;}}/>
                 <DataRow title="Kosten (% vom getilgten)" variants={this.state.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
                 
-                <DataRow title="Extra-Tilgung pro Monat" variants={this.state.data} value={"TBD"}/>
-                <DataRow title="Extra-Tilgung pro Jahr" variants={this.state.data} value={"TBD"}/>
             </table>
           </div>
 	);
