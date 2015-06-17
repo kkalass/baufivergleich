@@ -8,6 +8,14 @@ var FormattedMessage = ReactIntl.FormattedMessage;
 var _ = require("underscore");
 
 /*
+ * Next Steps
+ * 
+ * - Anschlussfinanzierung generell lösen und Worst-Case Beispiele rechnen lassen, auch um meine Kosten-Berechnung zu prüfen
+ * - Berechnung fixen, so dass die Ergebnisse mit den Haspa-Ergebnissen korrelieren
+ * - Weitere Finanzierungsszenarien einspielen
+ */
+
+/*
  Kriterien zum Beurteilen von Immobilienfinanzierungsangeboten:
  
  - Laufzeit
@@ -45,10 +53,20 @@ var runden0 = function (number) {
 var emptyResult = {betrag: 0.0, monatsrate: 0.0 , restschuld: 0.0, kosten: 0.0, getilgt: 0.0, monthlyValues:[], parts: []};
 
 var addResult = function(memo, result) {
+    /*
+    if (!memo) {
+        return result;
+    }
+    if (!result) {
+      
+        return memo;
+    }
+    */
     return {
         parts: (memo.parts || []).concat(result),
         betrag: memo.betrag + result.betrag,
         monatsrate: memo.monatsrate + result.monatsrate,
+        monatsraten: (memo.monatsraten||[]).concat(result.monatsrate||[]),
         restschuld: memo.restschuld + result.restschuld,
         //memo.monthlyValues + result.monthlyValues,
         kosten: memo.kosten + result.kosten,
@@ -58,11 +76,12 @@ var addResult = function(memo, result) {
 
 var withProzentGetilgt = function(reduced) {
 
-    var kostenProzentGetilgt = runden((reduced.kosten/reduced.getilgt)*100);
+    var kostenProzentGetilgt = reduced.getilgt === 0 ? undefined : runden((reduced.kosten/reduced.getilgt)*100);
     return {
         parts: reduced.parts,
         betrag: reduced.betrag,
         monatsrate: reduced.monatsrate,
+        monatsraten: reduced.monatsraten,
         restschuld: reduced.restschuld,
         monthlyValues: reduced.monthlyValues,
         kosten: reduced.kosten,
@@ -83,13 +102,12 @@ var mehrereBerechnnen = function(fkt, kredite) {
 
 var berechnen = function(input) {
     var result;
-    if (!_.isArray(input.kredite) && !_.isArray(input.bauspar)) {
-        result = hypothekendarlehen(input);
+    if (!_.isArray(input) && !_.isArray(input.kredite)) {
+        console.log('Berechne', input)
+        result = input.type === "bauspar" ? bausparvertrag(input) : hypothekendarlehen(input);
     } else {
-        var kreditResult = mehrereBerechnnen(hypothekendarlehen, input.kredite);
-        var bausparResult = mehrereBerechnnen(bausparvertrag, input.bauspar);
-        var total = addResult(kreditResult || emptyResult, bausparResult || emptyResult);
-        result = withProzentGetilgt(total);
+        var kreditResult = mehrereBerechnnen(berechnen, _.isArray(input) ? input : input.kredite);
+        result = withProzentGetilgt(kreditResult);
     }
     console.log('Kreditberechnung: ', input, " => ", result);
     return result;
@@ -105,8 +123,13 @@ var bausparphase = function(input) {
     for (var i=0; i < monate; i++) {
         var sparbetrag = i ? monthlyValues[i-1].sparbetrag : 0;
         
-        // FIXME: gilt hier wirklich monatszins, oder ist das nicht ein Jahreszins?
-        var zinsertrag = runden(sparbetrag* ((zins/12.0)/100.0));
+        // FIXME: Jahreszins korrekt am Ende eines Jahres, nicht am Ende von 12 Monaten berechnen!
+        // FIXME: Zinsberechnungserbebnis weicht von Haspa ab!
+        var zinsertrag = 0;
+        if ((i % 12 ) === 0) {
+            zinsertrag = runden(sparbetrag* (zins/100.0));
+        }
+        
         sparbetrag += zinsertrag;
         
         // sparen
@@ -124,7 +147,7 @@ var bausparphase = function(input) {
         monatsrate: monatsrate,
         monthlyValues: monthlyValues,
         getilgt: runden(sparbetrag),
-        kosten: runden(gebuehr)
+        kosten: runden(gebuehr.abschluss + 12 * (gebuehr.jahr || 0)) 
     };
 };
 
@@ -134,8 +157,12 @@ var bausparvertrag = function(input) {
     // sparphase
     var sparphase = input.sparphase || {};
     var sparphaseLaufzeit = sparphase.laufzeit || {};
+    var spargebuehr = input.gebuehr || {};
     var sparergebnis = bausparphase({
-        gebuehr: input.gebuehr,
+        gebuehr: {
+            abschluss: spargebuehr.abschluss,
+            jahr: spargebuehr.jahr
+        },
         laufzeit: {
             jahre: sparphaseLaufzeit.jahre
         },
@@ -154,6 +181,7 @@ var bausparvertrag = function(input) {
         laufzeit: {
             jahre: kreditlaufzeit.jahre
         },
+        monatsrate: kreditphase.monatsrate,
         tilgung: kreditphase.tilgung,
         sollzins: kreditphase.sollzins,
         erwartet: {
@@ -163,15 +191,17 @@ var bausparvertrag = function(input) {
         }
     });
     
-    //betrag: 270000,
+    
     return {
         betrag: betrag,
+        kosten: sparergebnis.kosten + kreditergebnis.kosten,
+        getilgt: sparergebnis.getilgt + kreditergebnis.getilgt,
         sparergebnis: sparergebnis,
         kreditergebnis: kreditergebnis,
         monthlyValues: sparergebnis.monthlyValues.concat(kreditergebnis.monthlyValues),
         // FIXME: Monatrate array
         monatsrate: sparergebnis.monatsrate,
-        monatsraten: [sparergebnis.monatsrate, kreditergebnis.monatsrate],
+        monatsraten: [{monthStart: 0, value: sparergebnis.monatsrate, monthEnd: 15*12}, {monthStart: 15*12, value: kreditergebnis.monatsrate, monthEnd: 30*12}],
         restschuld: kreditergebnis.restschuld
     }
 };
@@ -186,7 +216,7 @@ var hypothekendarlehen = function(input) {
     var effektivzins = input.effektivzins;// 2.50,
     
     var yearly = betrag * ((tilgung+sollzins)/100.0);
-    var monatsrate = runden(yearly / 12.0);
+    var monatsrate = tilgung === undefined ? input.monatsrate : runden(yearly / 12.0);
     
     var kosten = 0;
     
@@ -211,17 +241,39 @@ var hypothekendarlehen = function(input) {
     
     var restschuld =  monthlyValues[monthlyValues.length - 1].restschuld;
     var getilgt = betrag - restschuld;
-    return withProzentGetilgt({
+    
+    var kreditresult = withProzentGetilgt({
         betrag: betrag,
         monatsrate: monatsrate,
-        restschuld:restschuld,
+        monatsraten: [{monthStart: 0, value: monatsrate, monthEnd: 15*12}],
+        restschuld: runden(restschuld),
         monthlyValues: monthlyValues,
         kosten: runden(kosten),
         getilgt: runden(getilgt)
     });
+    
+    if (!input.abloesung) {
+        return kreditresult;
+    }
+    var abloesung = input.abloesung;
+    
+ // FIXME: sicherstellen dass Restschuld und summe der abloesungsbeträge passen!
+    if (!_.isArray(abloesung) && !abloesung.betrag) {
+        abloesung = _.clone(abloesung);
+        abloesung.betrag = kreditresult.restschuld;    
+        
+    }
+    var abloesungsresult = berechnen(abloesung);
+    
+    return withProzentGetilgt({
+        betrag: kreditresult.betrag,
+        monatsraten: (kreditresult.monatsraten||[]).concat(abloesungsresult.monatsraten || []),
+        restschuld: abloesungsresult.restschuld,
+        // FIXME: join monthly values
+        kosten: kreditresult.kosten + abloesungsresult.kosten,
+        getilgt: kreditresult.getilgt + abloesungsresult.getilgt
+    });
 }
-
-
 
 
 
@@ -239,6 +291,7 @@ var Creditweb = {
         effektivzins: 2.50
     }
 };
+
 
 var HaspaAnnu = {
     label: "Haspa Annuitätendarlehen - Angebot vom 28.05.2015",
@@ -270,50 +323,142 @@ var HaspaKFW = {
         effektivzins: 1.56
     }
 };
+var KFWAbloesungSehrSchlecht = {
+    label: "Sehr schlechtes Anschlussdarlehen fuer KFW - Angebot vom 28.05.2015",
+    laufzeit: {jahre: 15},
+    startzeit: {monat: 6},
+    
+    tilgung: 2.24,
+    sollzins: 12.00,
+};
+
+var KFWAbloesungSehrGut = {
+    label: "Sehr gutes Anschlussdarlehen fuer KFW - Angebot vom 28.05.2015",
+    laufzeit: {jahre: 15},
+    startzeit: {monat: 6},
+    
+    tilgung: 5.9,
+    sollzins: 1.00,
+
+};
+
+var CreditwebAbloesungSehrSchlecht = {
+    label: "Sehr schlechtes Anschlussdarlehen fuer Creditweb",
+    laufzeit: {jahre: 20},
+    startzeit: {monat: 7},
+    
+    tilgung: 1.00,
+    sollzins: 12.00,
+};
+
+var CreditwebAbloesungSehrGut = {
+    label: "Sehr gutes Anschlussdarlehen fuer Creditweb",
+    laufzeit: {jahre: 20},
+    startzeit: {monat: 7},
+    
+    tilgung: 5.9,
+    sollzins: 1.00,
+
+};
+
+var CreditwebAbloesungErwartet = {
+    label: "erwartetes Anschlussdarlehen fuer Creditweb",
+    laufzeit: {jahre: 20},
+    startzeit: {monat: 7},
+    
+    tilgung: 3,
+    sollzins: 5.00,
+
+};
+
+var CreditwebEquivalent = {
+    label: "equivalentes Anschlussdarlehen fuer Creditweb",
+    laufzeit: {jahre: 20},
+    startzeit: {monat: 7},
+    
+    tilgung: 3,
+    sollzins: 2.47,
+
+};
 
 var Haspa = {
     label: "Haspa - Angebot vom 28.05.2015",
     kredite: [HaspaAnnu, HaspaKFW]
 };
-var HaspaBauspar = {
-    label: "Haspa - Bauspar Angebot vom 28.05.2015",
-    kredite: [{
-        label: "Haspa Bauspar Hypoathekendarlehen - Angebot vom 28.05.2015",
-        laufzeit: {jahre: 15},
-        //startzeit: {monat: 6},
-        betrag: 270000,
 
-        tilgung: 0.0,
-        sollzins: 2.25,
-        
-        erwartet: {
-            monatsrate: 506.25,
-            restschuld: 270000,
-            effektivzins: 2.31
-        }
-    }, HaspaKFW],
-    bauspar: [{
+var HaspaBausparDarlehen = {
+    label: "Haspa Bauspar Hypoathekendarlehen - Angebot vom 28.05.2015",
+    type: "kredit",
+    laufzeit: {jahre: 15},
+    //startzeit: {monat: 6},
+    betrag: 270000,
+    abloesung: [{
         label: "Haspa Bauspar - Angebot vom 28.05.2015",
-        gebuehr: 2700,
+        type: "bauspar",
+        gebuehr: {abschluss: 2700, jahr: 12},
         betrag: 270000,
         sparphase: {
             laufzeit: {jahre: 15},
             monatsrate: 623,
-            zins: 0.01,
+            zins: 0.25,
         },
         kreditphase: {
             laufzeit: {jahre: 15},
-            tilgung: 0.0,
-            sollzins: 2.25,
+            tilgung: undefined,
+            monatsrate: 1080,
+            sollzins: 2.95,
             
             erwartet: {
-                monatsrate: 0,
+                monatsrate: 1080,
                 restschuld: 0,
                 effektivzins: 2.31
             }
         }
-    }]
+    }],
+    tilgung: 0.0,
+    sollzins: 2.25,
+    
+    erwartet: {
+        monatsrate: 506.25,
+        restschuld: 270000,
+        effektivzins: 2.31
+    }
 };
+
+var HaspaBauspar1 = {
+    label: "Haspa - Bauspar Angebot vom 28.05.2015 ohne KFW Tilgung",
+    kredite: [HaspaBausparDarlehen, HaspaKFW]
+};
+var HaspaBauspar2 = {
+    label: "Haspa - Bauspar Angebot vom 28.05.2015 mit sehr guter KFW Tilgung",
+    kredite: [HaspaBausparDarlehen, _.defaults({abloesung: KFWAbloesungSehrGut}, HaspaKFW)]
+};
+var HaspaBauspar3 = {
+    label: "Haspa - Bauspar Angebot vom 28.05.2015 mit sehr schlechter KFW Tilgung",
+    kredite: [HaspaBausparDarlehen, _.defaults({abloesung: KFWAbloesungSehrSchlecht}, HaspaKFW)]
+};
+
+var Creditweb1 = {
+    label: "Creditweb vom 28.05.2015 ohne Anschlussfinanzierung",
+    kredite: [Creditweb]
+};
+var Creditweb2 = {
+    label: "Creditweb mit sehr guter Anschlussfinanzierung",
+    kredite: [_.defaults({abloesung: CreditwebAbloesungSehrGut}, Creditweb)]
+};
+var Creditweb3 = {
+    label: "Creditweb mit sehr schlechter Anschlussfinanzierung",
+    kredite: [_.defaults({abloesung: CreditwebAbloesungSehrSchlecht}, Creditweb)]
+};
+var Creditweb4 = {
+    label: "Creditweb mit erwarteter Anschlussfinanzierung",
+    kredite: [_.defaults({abloesung: CreditwebAbloesungErwartet}, Creditweb)]
+};
+var Creditweb5 = {
+    label: "Creditweb mit equivalenter Anschlussfinanzierung",
+    kredite: [_.defaults({abloesung: CreditwebEquivalent}, Creditweb)]
+};
+
 
 var behaviour1 = {
   label: "Genaue Monatsrate, keine Extratilgung",
@@ -323,9 +468,16 @@ var behaviour1 = {
   yearlyExtra: 0
 };
 
-var varianten = [ {terms: Creditweb, behaviour: behaviour1},
+var varianten = [ 
                   {terms: Haspa, behaviour: behaviour1},
-                  {terms: HaspaBauspar, behaviour: behaviour1}
+                  {terms: Creditweb1, behaviour: behaviour1},
+                  {terms: Creditweb2, behaviour: behaviour1},
+                  {terms: Creditweb3, behaviour: behaviour1},
+                  {terms: Creditweb4, behaviour: behaviour1},
+                  {terms: Creditweb5, behaviour: behaviour1},
+                  {terms: HaspaBauspar1, behaviour: behaviour1},
+                  {terms: HaspaBauspar2, behaviour: behaviour1},
+                  {terms: HaspaBauspar3, behaviour: behaviour1}
                   ];
 var DataRow = React.createClass({
     render: function() {
@@ -344,7 +496,8 @@ var concatTermInput = function(fkt, variant) {
     if (value !== undefined) {
         return value;
     }
-    return (<div>{_.map(terms.kredite, function(terms, idx) {return (<span>{idx!=0?' | ':''}{fkt(terms)}</span>);})}</div>);
+    var childTerms = terms.kredite.concat((terms.bauspar|| []).map(function(bauspar) {return bauspar.kreditphase;}) );
+    return (<div>{_.map(childTerms, function(terms, idx) {return (<span>{idx!=0?' | ':''}{fkt(terms)}</span>);})}</div>);
 };
 
 var PriceFormat = function (value) {
