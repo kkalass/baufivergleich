@@ -66,7 +66,7 @@ var addResult = function(memo, result) {
         parts: (memo.parts || []).concat(result),
         betrag: memo.betrag + result.betrag,
         monatsrate: memo.monatsrate + result.monatsrate,
-        monatsraten: (memo.monatsraten||[]).concat(result.monatsrate||[]),
+        monatsraten: (memo.monatsraten||[]).concat(result.monatsraten||[]),
         restschuld: memo.restschuld + result.restschuld,
         //memo.monthlyValues + result.monthlyValues,
         kosten: memo.kosten + result.kosten,
@@ -151,6 +151,13 @@ var bausparphase = function(input) {
     };
 };
 
+var laufzeitToMonths = function(laufzeit) {
+    if (!laufzeit) {
+        return 0;
+    }
+    return (laufzeit.monate || 0) + (laufzeit.jahre || 0)*12;
+}
+
 var bausparvertrag = function(input) {
     var betrag = input.betrag;
     
@@ -158,7 +165,15 @@ var bausparvertrag = function(input) {
     var sparphase = input.sparphase || {};
     var sparphaseLaufzeit = sparphase.laufzeit || {};
     var spargebuehr = input.gebuehr || {};
+    
+    var creditStartMonths = laufzeitToMonths(input.startzeit);
+    var sparMonths = laufzeitToMonths(sparphaseLaufzeit);
+    var sparStartMonths = creditStartMonths - sparMonths; 
+        
     var sparergebnis = bausparphase({
+        startzeit: {
+            monate: sparStartMonths
+        },
         gebuehr: {
             abschluss: spargebuehr.abschluss,
             jahr: spargebuehr.jahr
@@ -178,6 +193,9 @@ var bausparvertrag = function(input) {
     var krediterwartet = kreditphase.erwartet || {};
     var kreditergebnis = hypothekendarlehen({
         betrag: restschuld,
+        startzeit: {
+            monate: creditStartMonths
+        },
         laufzeit: {
             jahre: kreditlaufzeit.jahre
         },
@@ -208,7 +226,9 @@ var bausparvertrag = function(input) {
 
 var hypothekendarlehen = function(input) {
     var years = input.laufzeit.jahre;// 20,
-    var monate = years * 12;
+    var startMonths = laufzeitToMonths(input.startzeit);
+    
+    var monate = laufzeitToMonths(input.laufzeit);
     var betrag = input.betrag;// 317000,
     var tilgung = input.tilgung;// 2.0,
     var tilgungVerzögerungMonate = input.tilgungVerzögerungMonate || 0;
@@ -226,8 +246,15 @@ var hypothekendarlehen = function(input) {
      * Wir machen das auch so. 
      */
     var monthlyValues = [];
-    for (var i=0; i < monate; i++) {
-        var restschuld = i ? monthlyValues[i-1].restschuld : betrag;
+    for (var c=0; c < startMonths + monate; c++) {
+        var i = c - startMonths;
+        if (i < 0) {
+            monthlyValues.push({
+                rate: 0
+            });
+            continue;
+        }
+        var restschuld = i>0 ? monthlyValues[i-1].restschuld : betrag;
         var zinsbetrag = runden(restschuld * ((sollzins/12.0)/100.0));
         kosten += zinsbetrag;
         var tilgungsbetrag = i>=tilgungVerzögerungMonate? monatsrate - zinsbetrag : 0;
@@ -245,7 +272,7 @@ var hypothekendarlehen = function(input) {
     var kreditresult = withProzentGetilgt({
         betrag: betrag,
         monatsrate: monatsrate,
-        monatsraten: [{monthStart: 0, value: monatsrate, monthEnd: 15*12}],
+        monatsraten: [{monthStart: startMonths, value: monatsrate, monthEnd: startMonths+monate}],
         restschuld: runden(restschuld),
         monthlyValues: monthlyValues,
         kosten: runden(kosten),
@@ -257,19 +284,25 @@ var hypothekendarlehen = function(input) {
     }
     var abloesung = input.abloesung;
     
- // FIXME: sicherstellen dass Restschuld und summe der abloesungsbeträge passen!
-    if (!_.isArray(abloesung) && !abloesung.betrag) {
-        abloesung = _.clone(abloesung);
-        abloesung.betrag = kreditresult.restschuld;    
-        
+    
+ // FIXME: sicherstellen dass Restschuld und Summe der Abloesungsbeträge passen!
+    if (abloesung) {
+        abloesung = (_.isArray(abloesung) ? abloesung : [abloesung]).map(function(a) {
+            var ab = _.clone(a);
+            if (!ab.betrag) {
+                ab.betrag = kreditresult.restschuld;    
+            }
+            ab.startzeit = {jahre: years};
+            return ab;
+        });
     }
+    
     var abloesungsresult = berechnen(abloesung);
     
     return withProzentGetilgt({
         betrag: kreditresult.betrag,
         monatsraten: (kreditresult.monatsraten||[]).concat(abloesungsresult.monatsraten || []),
         restschuld: abloesungsresult.restschuld,
-        // FIXME: join monthly values
         kosten: kreditresult.kosten + abloesungsresult.kosten,
         getilgt: kreditresult.getilgt + abloesungsresult.getilgt
     });
@@ -292,6 +325,21 @@ var Creditweb = {
     }
 };
 
+
+var Herrmann1 = {
+    label: "Herrmann 1 -  17.06.2015",
+    laufzeit: {jahre: 15},
+    startzeit: {monat: 7},
+    betrag: 326000,
+    tilgung: 2.5,
+    sollzins: 2.15,
+    
+    erwartet: {
+        monatsrate: 1263.25,
+        //restschuld: 153230,
+        //effektivzins: 2.50
+    }
+};
 
 var HaspaAnnu = {
     label: "Haspa Annuitätendarlehen - Angebot vom 28.05.2015",
@@ -468,16 +516,16 @@ var behaviour1 = {
   yearlyExtra: 0
 };
 
-var varianten = [ 
+var varianten = [ {terms: Herrmann1, behaviour: behaviour1},
                   {terms: Haspa, behaviour: behaviour1},
                   {terms: Creditweb1, behaviour: behaviour1},
-                  {terms: Creditweb2, behaviour: behaviour1},
-                  {terms: Creditweb3, behaviour: behaviour1},
+                  //{terms: Creditweb2, behaviour: behaviour1},
+                  //{terms: Creditweb3, behaviour: behaviour1},
                   {terms: Creditweb4, behaviour: behaviour1},
-                  {terms: Creditweb5, behaviour: behaviour1},
+                  //{terms: Creditweb5, behaviour: behaviour1},
                   {terms: HaspaBauspar1, behaviour: behaviour1},
-                  {terms: HaspaBauspar2, behaviour: behaviour1},
-                  {terms: HaspaBauspar3, behaviour: behaviour1}
+                  //{terms: HaspaBauspar2, behaviour: behaviour1},
+                  //{terms: HaspaBauspar3, behaviour: behaviour1}
                   ];
 var DataRow = React.createClass({
     render: function() {
@@ -504,6 +552,41 @@ var PriceFormat = function (value) {
     return (
       <FormattedMessage message="{total, number, eur}" total={value} />
     );
+};
+ 
+var MonatsratenFormat = function(monatsraten) {
+    var ratespermonth = _.reduce(monatsraten, function(memo, monatsrate) {
+        var start = monatsrate.monthStart;
+        var end = monatsrate.monthEnd;
+        for (var i = 0; i < end; i++) {
+            if (memo.length <= i) {
+                memo.push(0);
+            }
+            if (i >= start && i < end) {
+                memo[i] = runden(memo[i] + monatsrate.value);
+            }
+        };
+        return memo;
+    }, []);
+    console.log(ratespermonth);
+    var combinedMonatsraten = _.reduce(ratespermonth, function (memo, value, index) {
+        //console.log('', value, ' idx' , index);
+        var r = memo.length > 0 ? memo[memo.length-1] : undefined;
+        if (!r || r.value !== value) {
+            var newR = {
+                value: value,
+                monthStart: index + 1,
+                monthEnd: index + 1
+            };
+            memo.push(newR);
+        } else {
+            r.monthEnd = index + 1;
+        }
+        return memo;
+    }, []);
+    return (<div>{combinedMonatsraten.map(function(monatsrate) {
+        return (<div>{monatsrate.monthStart} - {monatsrate.monthEnd}: <FormattedMessage message="{total, number, eur}" total={monatsrate.value} /></div>);
+    })}</div>);
 };
 
 var StartPage = React.createClass({
@@ -549,7 +632,7 @@ var StartPage = React.createClass({
                 <DataRow title="Kreditbetrag" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag;}}/>
                 <DataRow title="Laufzeit (Jahre)" variants={this.state.data} value={concatTermInput.bind(this, function(terms) {return terms.laufzeit? terms.laufzeit.jahre : undefined})}/>
                 <DataRow title="Sollzins" variants={this.state.data} value={concatTermInput.bind(this, function(terms) {return terms.sollzins? terms.sollzins + ' %' : undefined})}/>
-                <DataRow className="emphazise" title="Monatsrate" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.monatsrate;}}/>
+                <DataRow className="emphazise" title="Monatsrate" variants={this.state.data} formatter={MonatsratenFormat} value={function(variant) {return variant.result.monatsraten;}}/>
                 <DataRow className="deemphazise" title="Monatsrate (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.monatsrate) : undefined;})}/>
                 <DataRow className="emphazise" title="Restschuld" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
                 <DataRow className="deemphazise" title="Restschuld (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.restschuld) : undefined;})}/>
