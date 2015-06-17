@@ -35,14 +35,6 @@ Add Ons:
  - szenario 'eigener Bausparvertrag für Extratilgung'. Um guten Zinssatz der Anschlussfinanzierung zu bekommen?
  */
 
-var resultTemplate = {
-    zinsBetrag: {
-                summe: 0,
-                details: [0]
-            },
-
-};
-
 var runden = function (number) {
     return parseFloat(number.toFixed(2))
 };
@@ -50,10 +42,11 @@ var runden0 = function (number) {
     return parseFloat(number.toFixed(0))
 };
 
-var emptyResult = {betrag: 0.0, monatsrate: 0.0 , restschuld: 0.0, kosten: 0.0, getilgt: 0.0, monthlyValues:[]};
+var emptyResult = {betrag: 0.0, monatsrate: 0.0 , restschuld: 0.0, kosten: 0.0, getilgt: 0.0, monthlyValues:[], parts: []};
 
 var addResult = function(memo, result) {
     return {
+        parts: (memo.parts || []).concat(result),
         betrag: memo.betrag + result.betrag,
         monatsrate: memo.monatsrate + result.monatsrate,
         restschuld: memo.restschuld + result.restschuld,
@@ -67,6 +60,7 @@ var withProzentGetilgt = function(reduced) {
 
     var kostenProzentGetilgt = runden((reduced.kosten/reduced.getilgt)*100);
     return {
+        parts: reduced.parts,
         betrag: reduced.betrag,
         monatsrate: reduced.monatsrate,
         restschuld: reduced.restschuld,
@@ -88,13 +82,17 @@ var mehrereBerechnnen = function(fkt, kredite) {
 
 
 var berechnen = function(input) {
+    var result;
     if (!_.isArray(input.kredite) && !_.isArray(input.bauspar)) {
-        return hypothekendarlehen(input);
-    };
-    var kreditResult = mehrereBerechnnen(hypothekendarlehen, input.kredite);
-    var bausparResult = mehrereBerechnnen(bausparvertrag, input.bauspar);
-    var total = addResult(kreditResult || emptyResult, bausparResult || emptyResult);
-    return withProzentGetilgt(total);
+        result = hypothekendarlehen(input);
+    } else {
+        var kreditResult = mehrereBerechnnen(hypothekendarlehen, input.kredite);
+        var bausparResult = mehrereBerechnnen(bausparvertrag, input.bauspar);
+        var total = addResult(kreditResult || emptyResult, bausparResult || emptyResult);
+        result = withProzentGetilgt(total);
+    }
+    console.log('Kreditberechnung: ', input, " => ", result);
+    return result;
 };
 
 var bausparphase = function(input) {
@@ -125,8 +123,8 @@ var bausparphase = function(input) {
     return {
         monatsrate: monatsrate,
         monthlyValues: monthlyValues,
-        getilgt: sparbetrag,
-        kosten: gebuehr
+        getilgt: runden(sparbetrag),
+        kosten: runden(gebuehr)
     };
 };
 
@@ -218,8 +216,8 @@ var hypothekendarlehen = function(input) {
         monatsrate: monatsrate,
         restschuld:restschuld,
         monthlyValues: monthlyValues,
-        kosten: kosten,
-        getilgt: getilgt
+        kosten: runden(kosten),
+        getilgt: runden(getilgt)
     });
 }
 
@@ -403,9 +401,11 @@ var StartPage = React.createClass({
                 <DataRow className="emphazise" title="Restschuld" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
                 <DataRow className="deemphazise" title="Restschuld (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.restschuld) : undefined;})}/>
                 
+                <DataRow title="Getilgt" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.getilgt;}}/>
+                
                 <DataRow title="Kosten (absolut)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.kosten;}}/>
                 <DataRow className="emphazise" title="Kosten (% vom getilgten)" variants={this.state.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
-                
+                <DataRow className="emphazise" title="CHECK" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag - ( variant.result.getilgt + variant.result.restschuld);}}/>
             </table>
           </div>
 	);
