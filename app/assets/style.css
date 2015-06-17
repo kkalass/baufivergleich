@@ -1,3 +1,15 @@
 baufivergleichButton img {
     height: 1em;
 }
+
+.deemphazise {
+    color: #ccc;
+}
+
+.emphazise {
+    color: red;
+}
+
+tr td {
+    padding: 10pt;
+}
