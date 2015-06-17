@@ -952,6 +952,9 @@ var StartPage = React.createClass({
             
             <h2>Creditweb3 - Rate hoch,  Risiko beherrschbar</h2>
             <Angebotstabelle data={this.state.creditweb3}/>
+        
+            <h2>Creditweb - Risiko hoch</h2>
+            <Angebotstabelle data={this.state.creditweb}/>
         </div>
     );
     }
