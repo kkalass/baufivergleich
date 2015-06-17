@@ -86,7 +86,11 @@ var withProzentGetilgt = function(reduced) {
         monthlyValues: reduced.monthlyValues,
         kosten: reduced.kosten,
         getilgt: reduced.getilgt,
-        kostenProzentGetilgt: kostenProzentGetilgt
+        kostenProzentGetilgt: kostenProzentGetilgt,
+        abloesungsresult: reduced.abloesungsresult,
+        kreditresult: reduced.kreditresult,
+        startzeitMonate: reduced.startzeitMonate,
+        laufzeitMonate: reduced.laufzeitMonate
     };
 };
 
@@ -156,6 +160,12 @@ var laufzeitToMonths = function(laufzeit) {
         return 0;
     }
     return (laufzeit.monate || 0) + (laufzeit.jahre || 0)*12;
+};
+var cloneLaufzeit = function (laufzeit) {
+    return {monate: laufzeit.monate || 0, jahre: laufzeit.jahre || 0};
+}
+var monthsToLaufzeit = function(months) {
+    return {monate: months%12, jahre: months/12 }
 }
 
 var bausparvertrag = function(input) {
@@ -211,6 +221,8 @@ var bausparvertrag = function(input) {
     
     
     return {
+        startzeitMonate: sparStartMonths,
+        laufzeitMonate: laufzeitToMonths(kreditlaufzeit) + laufzeitToMonths(sparphaseLaufzeit),
         betrag: betrag,
         kosten: sparergebnis.kosten + kreditergebnis.kosten,
         getilgt: sparergebnis.getilgt + kreditergebnis.getilgt,
@@ -254,7 +266,7 @@ var hypothekendarlehen = function(input) {
             });
             continue;
         }
-        var restschuld = i>0 ? monthlyValues[i-1].restschuld : betrag;
+        var restschuld = i>0 ? monthlyValues[c-1].restschuld : betrag;
         var zinsbetrag = runden(restschuld * ((sollzins/12.0)/100.0));
         kosten += zinsbetrag;
         var tilgungsbetrag = i>=tilgungVerzögerungMonate? monatsrate - zinsbetrag : 0;
@@ -272,6 +284,8 @@ var hypothekendarlehen = function(input) {
     var kreditresult = withProzentGetilgt({
         betrag: betrag,
         monatsrate: monatsrate,
+        startzeitMonate: startMonths,
+        laufzeitMonate: monate,
         monatsraten: [{monthStart: startMonths, value: monatsrate, monthEnd: startMonths+monate}],
         restschuld: runden(restschuld),
         monthlyValues: monthlyValues,
@@ -299,12 +313,18 @@ var hypothekendarlehen = function(input) {
     
     var abloesungsresult = berechnen(abloesung);
     
+    var startzeitMonate = Math.min(kreditresult.startzeitMonate, abloesungsresult.startzeitMonate);
+    var laufzeitMonate = Math.max(kreditresult.startzeitMonate + kreditresult.laufzeitMonate, abloesungsresult.startzeitMonate + abloesungsresult.laufzeitMonate) - startzeitMonate;
     return withProzentGetilgt({
         betrag: kreditresult.betrag,
         monatsraten: (kreditresult.monatsraten||[]).concat(abloesungsresult.monatsraten || []),
         restschuld: abloesungsresult.restschuld,
         kosten: kreditresult.kosten + abloesungsresult.kosten,
-        getilgt: kreditresult.getilgt + abloesungsresult.getilgt
+        getilgt: kreditresult.getilgt + abloesungsresult.getilgt,
+        startzeitMonate: startzeitMonate,
+        laufzeitMonate: laufzeitMonate,
+        abloesungsresult: abloesungsresult,
+        kreditresult: kreditresult
     });
 }
 
@@ -325,6 +345,8 @@ var Creditweb = {
     }
 };
 
+var Creditweb2=_.defaults({tilgung: 3.00}, Creditweb);
+var Creditweb3=_.defaults({tilgung: 2.45}, Creditweb);
 
 var Herrmann1 = {
     label: "Herrmann 1 -  17.06.2015",
@@ -371,68 +393,6 @@ var HaspaKFW = {
         effektivzins: 1.56
     }
 };
-var KFWAbloesungSehrSchlecht = {
-    label: "Sehr schlechtes Anschlussdarlehen fuer KFW - Angebot vom 28.05.2015",
-    laufzeit: {jahre: 15},
-    startzeit: {monat: 6},
-    
-    tilgung: 2.24,
-    sollzins: 12.00,
-};
-
-var KFWAbloesungSehrGut = {
-    label: "Sehr gutes Anschlussdarlehen fuer KFW - Angebot vom 28.05.2015",
-    laufzeit: {jahre: 15},
-    startzeit: {monat: 6},
-    
-    tilgung: 5.9,
-    sollzins: 1.00,
-
-};
-
-var CreditwebAbloesungSehrSchlecht = {
-    label: "Sehr schlechtes Anschlussdarlehen fuer Creditweb",
-    laufzeit: {jahre: 20},
-    startzeit: {monat: 7},
-    
-    tilgung: 1.00,
-    sollzins: 12.00,
-};
-
-var CreditwebAbloesungSehrGut = {
-    label: "Sehr gutes Anschlussdarlehen fuer Creditweb",
-    laufzeit: {jahre: 20},
-    startzeit: {monat: 7},
-    
-    tilgung: 5.9,
-    sollzins: 1.00,
-
-};
-
-var CreditwebAbloesungErwartet = {
-    label: "erwartetes Anschlussdarlehen fuer Creditweb",
-    laufzeit: {jahre: 20},
-    startzeit: {monat: 7},
-    
-    tilgung: 3,
-    sollzins: 5.00,
-
-};
-
-var CreditwebEquivalent = {
-    label: "equivalentes Anschlussdarlehen fuer Creditweb",
-    laufzeit: {jahre: 20},
-    startzeit: {monat: 7},
-    
-    tilgung: 3,
-    sollzins: 2.47,
-
-};
-
-var Haspa = {
-    label: "Haspa - Angebot vom 28.05.2015",
-    kredite: [HaspaAnnu, HaspaKFW]
-};
 
 var HaspaBausparDarlehen = {
     label: "Haspa Bauspar Hypoathekendarlehen - Angebot vom 28.05.2015",
@@ -473,41 +433,6 @@ var HaspaBausparDarlehen = {
     }
 };
 
-var HaspaBauspar1 = {
-    label: "Haspa - Bauspar Angebot vom 28.05.2015 ohne KFW Tilgung",
-    kredite: [HaspaBausparDarlehen, HaspaKFW]
-};
-var HaspaBauspar2 = {
-    label: "Haspa - Bauspar Angebot vom 28.05.2015 mit sehr guter KFW Tilgung",
-    kredite: [HaspaBausparDarlehen, _.defaults({abloesung: KFWAbloesungSehrGut}, HaspaKFW)]
-};
-var HaspaBauspar3 = {
-    label: "Haspa - Bauspar Angebot vom 28.05.2015 mit sehr schlechter KFW Tilgung",
-    kredite: [HaspaBausparDarlehen, _.defaults({abloesung: KFWAbloesungSehrSchlecht}, HaspaKFW)]
-};
-
-var Creditweb1 = {
-    label: "Creditweb vom 28.05.2015 ohne Anschlussfinanzierung",
-    kredite: [Creditweb]
-};
-var Creditweb2 = {
-    label: "Creditweb mit sehr guter Anschlussfinanzierung",
-    kredite: [_.defaults({abloesung: CreditwebAbloesungSehrGut}, Creditweb)]
-};
-var Creditweb3 = {
-    label: "Creditweb mit sehr schlechter Anschlussfinanzierung",
-    kredite: [_.defaults({abloesung: CreditwebAbloesungSehrSchlecht}, Creditweb)]
-};
-var Creditweb4 = {
-    label: "Creditweb mit erwarteter Anschlussfinanzierung",
-    kredite: [_.defaults({abloesung: CreditwebAbloesungErwartet}, Creditweb)]
-};
-var Creditweb5 = {
-    label: "Creditweb mit equivalenter Anschlussfinanzierung",
-    kredite: [_.defaults({abloesung: CreditwebEquivalent}, Creditweb)]
-};
-
-
 var behaviour1 = {
   label: "Genaue Monatsrate, keine Extratilgung",
   // precicely the required amount - not more
@@ -516,17 +441,6 @@ var behaviour1 = {
   yearlyExtra: 0
 };
 
-var varianten = [ {terms: Herrmann1, behaviour: behaviour1},
-                  {terms: Haspa, behaviour: behaviour1},
-                  {terms: Creditweb1, behaviour: behaviour1},
-                  //{terms: Creditweb2, behaviour: behaviour1},
-                  //{terms: Creditweb3, behaviour: behaviour1},
-                  {terms: Creditweb4, behaviour: behaviour1},
-                  //{terms: Creditweb5, behaviour: behaviour1},
-                  {terms: HaspaBauspar1, behaviour: behaviour1},
-                  //{terms: HaspaBauspar2, behaviour: behaviour1},
-                  //{terms: HaspaBauspar3, behaviour: behaviour1}
-                  ];
 var DataRow = React.createClass({
     render: function() {
         
@@ -568,7 +482,7 @@ var MonatsratenFormat = function(monatsraten) {
         };
         return memo;
     }, []);
-    console.log(ratespermonth);
+    //console.log(ratespermonth);
     var combinedMonatsraten = _.reduce(ratespermonth, function (memo, value, index) {
         //console.log('', value, ' idx' , index);
         var r = memo.length > 0 ? memo[memo.length-1] : undefined;
@@ -584,26 +498,13 @@ var MonatsratenFormat = function(monatsraten) {
         }
         return memo;
     }, []);
-    return (<div>{combinedMonatsraten.map(function(monatsrate) {
-        return (<div>{monatsrate.monthStart} - {monatsrate.monthEnd}: <FormattedMessage message="{total, number, eur}" total={monatsrate.value} /></div>);
-    })}</div>);
+    return (<table>{combinedMonatsraten.map(function(monatsrate) {
+        return (<tr><td>{monatsrate.monthStart}</td><td>&nbsp;-&nbsp;</td><td>{monatsrate.monthEnd}</td><td>:&nbsp;</td><td><FormattedMessage message="{total, number, eur}" total={monatsrate.value} /></td></tr>);
+    })}</table>);
 };
 
-var StartPage = React.createClass({
-    // Note that each Page must include the IntlMixin, otherwise the i18n data
-    // doesn't get passed down
-    mixins: [Router.Navigation, ReactIntl.IntlMixin],
-
-    getInitialState: function() {
-        return {data:_.map(varianten, function(variante) {
-            return {
-                input: variante,
-                result: berechnen(variante.terms)
-            }
-        })};
-    },
-    
-
+var Angebotstabelle = React.createClass({
+   
     /*
      * 
  - Laufzeit
@@ -619,32 +520,440 @@ var StartPage = React.createClass({
  
      */
     // <DataRow title="Verhalten" variants={this.state.data} value={function(variant) {return variant.input.behaviour.label;}}/>
-    
+/*
+                 <DataRow title="Laufzeit (Jahre)" variants={this.state.data} value={concatTermInput.bind(this, function(terms) {return terms.laufzeit? terms.laufzeit.jahre : undefined})}/>
+                <DataRow title="Sollzins" variants={this.state.data} value={concatTermInput.bind(this, function(terms) {return terms.sollzins? terms.sollzins + ' %' : undefined})}/>
+                <DataRow className="emphazise" title="CHECK" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag - ( variant.result.getilgt + variant.result.restschuld);}}/>
+                <DataRow className="deemphazise" title="Monatsrate (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.monatsrate) : undefined;})}/>
+                <DataRow className="deemphazise" title="Restschuld (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.restschuld) : undefined;})}/>
+
+ */    
     render: function () {
-	return (
+    return (
+            <table className="angebote">
+                <DataRow title="Bedingungen" variants={this.props.data} value={function(variant) {return variant.input.terms.label;}}/>
+                <DataRow title="Kreditbetrag" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag;}}/>
+                <DataRow className="emphazise" title="Monatsrate" variants={this.props.data} formatter={MonatsratenFormat} value={function(variant) {return variant.result.monatsraten;}}/>
+                <DataRow className="emphazise" title="Restschuld" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
+                
+                <DataRow title="Getilgt" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.getilgt;}}/>
+                
+                <DataRow title="Kosten (absolut)" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.kosten;}}/>
+                <DataRow className="emphazise" title="Kosten (% vom getilgten)" variants={this.props.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
+            </table>
+          
+    );
+    }
+});
+
+var variantenHerrmann = [ 
+    
+    {terms: {
+        label: "Equivalente Anschlussfinanzierung (2.15%, 30 Jahre)",
+        kredite: [_.defaults({abloesung: {
+            laufzeit: {jahre: 15},
+            startzeit: {monat: 6},
+            
+            tilgung: 5.655,
+            sollzins: 2.15,
+
+        }}, Herrmann1)]
+    }},
+    {terms: {
+        label: "Vermutliche Anschlussfinanzierung (5%, 30 Jahre)",
+        kredite: [_.defaults({abloesung: {
+            laufzeit: {jahre: 15},
+            startzeit: {monat: 6},
+            
+            tilgung: 4.489,
+            sollzins: 5,
+
+        }}, Herrmann1)]
+    }},
+    {terms: {
+        label: "Vermutliche (ungetilgte) Anschlussfinanzierung (5%, 30++ Jahre)",
+        kredite: [_.defaults({abloesung: {
+            laufzeit: {jahre: 15},
+            startzeit: {monat: 6},
+            
+            tilgung: 0,
+            sollzins: 5
+
+        }}, Herrmann1)]
+    }},
+    {terms: {
+        label: "Sehr schlechte Anschlussfinanzierung (12%, 30 Jahre)",
+        kredite: [_.defaults({abloesung: {
+            laufzeit: {jahre: 15},
+            startzeit: {monat: 6},
+            
+            tilgung: 2.402,
+            sollzins: 12.00,
+
+        }}, Herrmann1)]
+    }},
+    {terms: {
+        label: "Sehr schlechte (ungetilgte) Anschlussfinanzierung (12%, 30++ Jahre)",
+        kredite: [_.defaults({abloesung: {
+            laufzeit: {jahre: 15},
+            startzeit: {monat: 6},
+            
+            tilgung: 0,
+            sollzins: 12.00,
+
+        }}, Herrmann1)]
+    }},
+    {terms: {
+        label: "Ohne Anschlussfinanzierung (Restschuld nach 15 Jahren)",
+        kredite: [Herrmann1]
+    }},
+];
+var variantenHaspa = [ 
+                  {terms: {
+                      label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren)",
+                      kredite: [HaspaAnnu, HaspaKFW]
+                  }}
+                  ];
+var variantenHaspaBauspar = [ 
+                {terms: {
+                    label: "Equivalente KFW Anschlussfinanzierung (1,55%, 30 Jahre)",
+                    kredite: [HaspaBausparDarlehen, _.defaults({abloesung: {
+                        laufzeit: {jahre: 20},
+                        tilgung: 4.08,
+                        sollzins: 1.57,
+                    }}, HaspaKFW)]
+                }},
+                {terms: {
+                    label: "Vermutliche KFW Anschlussfinanzierung (5%, 30 Jahre)",
+                    kredite: [HaspaBausparDarlehen, _.defaults({abloesung: {
+                        laufzeit: {jahre: 20},
+                        tilgung: 2.796,
+                        sollzins: 5.00,
+                
+                    }}, HaspaKFW)]
+                }},
+                {terms: {
+                    label: "Vermutliche (ungetilgte) KFW Anschlussfinanzierung (5%, 30++ Jahre)",
+                    kredite: [HaspaBausparDarlehen, _.defaults({abloesung: {
+                        laufzeit: {jahre: 20},
+                        tilgung: 0,
+                        sollzins: 5.00,
+                
+                    }}, HaspaKFW)]
+                }},
+                      {terms: {
+                          label: "Sehr schlechte KFW Anschlussfinanzierung (12%, 30 Jahre)",
+                          kredite: [HaspaBausparDarlehen, _.defaults({abloesung: {
+                              label: "Sehr schlechtes Anschlussdarlehen fuer KFW - Angebot vom 28.05.2015",
+                              laufzeit: {jahre: 20},
+                              startzeit: {monat: 6},
+                              
+                              tilgung: 1.16,
+                              sollzins: 12.00,
+                          }}, HaspaKFW)]
+                      }},
+                      {terms: {
+                          label: "Sehr schlechte (ungetilgte) Anschlussfinanzierung (12%, 30++ Jahre)",
+                          kredite: [HaspaBausparDarlehen, _.defaults({abloesung: {
+                              label: "Sehr schlechtes (ungetilgtes) Anschlussdarlehen fuer KFW - Angebot vom 28.05.2015",
+                              laufzeit: {jahre: 20},
+                              startzeit: {monat: 6},
+                              
+                              tilgung: 0,//1.15,
+                              sollzins: 12.00,
+                          }}, HaspaKFW)]
+                      }},
+                      {terms: {
+                          label: "Ohne KFW Anschlussfinanzierung (Restschuld nach 10 Jahren, Gesamt 30 Jahre)",
+                          kredite: [HaspaBausparDarlehen, HaspaKFW]
+                      }},
+                      /*
+                      {terms: {
+                          label: "Sehr gute KFW Anschlussfinanzierung (1%, 30 Jahre)",
+                          kredite: [HaspaBausparDarlehen, _.defaults({abloesung: {
+                              label: "Sehr gutes Anschlussdarlehen fuer KFW - Angebot vom 28.05.2015",
+                              laufzeit: {jahre: 20},
+                              startzeit: {monat: 6},
+                              
+                              tilgung: 4.3,
+                              sollzins: 1.00,
+
+                          }}, HaspaKFW)]
+                      }},
+                      */
+                      ];
+
+
+
+var variantenCreditweb = [ 
+                {terms: {
+                    label: "Equivalente Anschlussfinanzierung (2.47%, 40 Jahre)",
+                    kredite: [_.defaults({abloesung: {
+                        label: "equivalentes Anschlussdarlehen fuer Creditweb",
+                        laufzeit: {jahre: 20},
+                        startzeit: {monat: 7},
+                        
+                        tilgung: 3.87,
+                        sollzins: 2.47,
+                
+                    }}, Creditweb)]
+                }},
+                {terms: {
+                    label: "Vermutliche Anschlussfinanzierung (5%, 40 Jahre)",
+                    kredite: [_.defaults({abloesung: {
+                        label: "erwartetes Anschlussdarlehen fuer Creditweb",
+                        laufzeit: {jahre: 20},
+                        startzeit: {monat: 7},
+                        
+                        tilgung: 2.919,
+                        sollzins: 5.00,
+                
+                    }}, Creditweb)]
+                }},
+                {terms: {
+                    label: "Vermutliche (ungetilgte) Anschlussfinanzierung (5%, 40 Jahre)",
+                    kredite: [_.defaults({abloesung: {
+                        label: "erwartetes Anschlussdarlehen fuer Creditweb",
+                        laufzeit: {jahre: 20},
+                        startzeit: {monat: 7},
+                        
+                        tilgung: 0,
+                        sollzins: 5.00,
+                
+                    }}, Creditweb)]
+                }},
+                  {terms: {
+                      label: "Sehr schlechte Anschlussfinanzierung (12%, 40 Jahre)",
+                      kredite: [_.defaults({abloesung: {
+                          label: "Sehr schlechtes , Anschlussdarlehen fuer Creditweb",
+                          laufzeit: {jahre: 20},
+                          startzeit: {monat: 7},
+                          
+                          tilgung: 1.213,
+                          sollzins: 12.00,
+                      }}, Creditweb)]
+                  }},
+                  {terms: {
+                      label: "Sehr schlechte (ungetilgte) Anschlussfinanzierung (12%, 40++ Jahre)",
+                      kredite: [_.defaults({abloesung: {
+                          label: "Sehr schlechtes (ungetilgtes), Anschlussdarlehen fuer Creditweb",
+                          laufzeit: {jahre: 20},
+                          startzeit: {monat: 7},
+                          
+                          tilgung: 0.00, 
+                          sollzins: 12.00,
+                      }}, Creditweb)]
+                  }},
+                  
+                  
+                  {terms: {
+                      label: "Ohne Anschlussfinanzierung (Restschuld nach 20 Jahren)",
+                      kredite: [Creditweb]
+                  }},
+                  /*{terms: {
+                      label: "Sehr gute Anschlussfinanzierung (1%, 40 Jahre)",
+                      kredite: [_.defaults({abloesung: {
+                          label: "Sehr gutes Anschlussdarlehen fuer Creditweb",
+                          laufzeit: {jahre: 20},
+                          startzeit: {monat: 7},
+                          
+                          tilgung: 4.517,
+                          sollzins: 1.00,
+
+                      }}, Creditweb)]
+                  }},
+                  */
+                  ];
+
+var variantenCreditweb2 = [ 
+                          {terms: {
+                              label: "Equivalente Anschlussfinanzierung (2.47%, 30 Jahre)",
+                              kredite: [_.defaults({abloesung: {
+                                  laufzeit: {jahre: 10},
+                                  startzeit: {monat: 7},
+                                  
+                                  tilgung: 8.825,
+                                  sollzins: 2.47,
+                          
+                              }}, Creditweb2)]
+                          }},
+                          {terms: {
+                              label: "Vermutliche Anschlussfinanzierung (5%, 30 Jahre)",
+                              kredite: [_.defaults({abloesung: {
+                                  laufzeit: {jahre: 10},
+                                  startzeit: {monat: 7},
+                                  
+                                  tilgung: 7.725,
+                                  sollzins: 5.00,
+                          
+                              }}, Creditweb2)]
+                          }},
+                          {terms: {
+                              label: "Vermutliche (ungetilgte) Anschlussfinanzierung (5%, 30 Jahre)",
+                              kredite: [_.defaults({abloesung: {
+                                  laufzeit: {jahre: 10},
+                                  startzeit: {monat: 7},
+                                  
+                                  tilgung: 0,
+                                  sollzins: 5.00,
+                          
+                              }}, Creditweb2)]
+                          }},
+                            {terms: {
+                                label: "Sehr schlechte Anschlussfinanzierung (12%, 30 Jahre)",
+                                kredite: [_.defaults({abloesung: {
+                                    laufzeit: {jahre: 10},
+                                    startzeit: {monat: 7},
+                                    
+                                    tilgung: 5.215,
+                                    sollzins: 12.00,
+                                }}, Creditweb2)]
+                            }},
+                            {terms: {
+                                label: "Sehr schlechte (ungetilgte) Anschlussfinanzierung (12%, 30++ Jahre)",
+                                kredite: [_.defaults({abloesung: {
+                                    laufzeit: {jahre: 10},
+                                    startzeit: {monat: 7},
+                                    
+                                    tilgung: 0.00, 
+                                    sollzins: 12.00,
+                                }}, Creditweb2)]
+                            }},
+                            
+                            
+                            {terms: {
+                                label: "Ohne Anschlussfinanzierung (Restschuld nach 20 Jahren)",
+                                kredite: [Creditweb2]
+                            }},
+                            /*{terms: {
+                                label: "Sehr gute Anschlussfinanzierung (1%, 40 Jahre)",
+                                kredite: [_.defaults({abloesung: {
+                                    label: "Sehr gutes Anschlussdarlehen fuer Creditweb",
+                                    laufzeit: {jahre: 20},
+                                    startzeit: {monat: 7},
+                                    
+                                    tilgung: 4.517,
+                                    sollzins: 1.00,
+
+                                }}, Creditweb)]
+                            }},
+                            */
+                            ];
+
+
+var variantenCreditweb3 = [ 
+                          {terms: {
+                              label: "Equivalente Anschlussfinanzierung (2.47%, 30 Jahre)",
+                              kredite: [_.defaults({abloesung: {
+                                  laufzeit: {jahre: 10},
+                                  startzeit: {monat: 7},
+                                  
+                                  tilgung: 8.825,
+                                  sollzins: 2.47,
+                          
+                              }}, Creditweb3)]
+                          }},
+                          {terms: {
+                              label: "Vermutliche Anschlussfinanzierung (5%, 30 Jahre)",
+                              kredite: [_.defaults({abloesung: {
+                                  laufzeit: {jahre: 10},
+                                  startzeit: {monat: 7},
+                                  
+                                  tilgung: 7.725,
+                                  sollzins: 5.00,
+                          
+                              }}, Creditweb3)]
+                          }},
+                          {terms: {
+                              label: "Vermutliche (ungetilgte) Anschlussfinanzierung (5%, 30 Jahre)",
+                              kredite: [_.defaults({abloesung: {
+                                  laufzeit: {jahre: 10},
+                                  startzeit: {monat: 7},
+                                  
+                                  tilgung: 0,
+                                  sollzins: 5.00,
+                          
+                              }}, Creditweb3)]
+                          }},
+                            {terms: {
+                                label: "Sehr schlechte Anschlussfinanzierung (12%, 30 Jahre)",
+                                kredite: [_.defaults({abloesung: {
+                                    laufzeit: {jahre: 10},
+                                    startzeit: {monat: 7},
+                                    
+                                    tilgung: 5.215,
+                                    sollzins: 12.00,
+                                }}, Creditweb3)]
+                            }},
+                            {terms: {
+                                label: "Sehr schlechte (ungetilgte) Anschlussfinanzierung (12%, 30++ Jahre)",
+                                kredite: [_.defaults({abloesung: {
+                                    laufzeit: {jahre: 10},
+                                    startzeit: {monat: 7},
+                                    
+                                    tilgung: 0.00, 
+                                    sollzins: 12.00,
+                                }}, Creditweb3)]
+                            }},
+                            
+                            
+                            {terms: {
+                                label: "Ohne Anschlussfinanzierung (Restschuld nach 20 Jahren)",
+                                kredite: [Creditweb3]
+                            }},
+                            
+                            ];
+var variantenBerechnen = function(varianten) {
+    return _.map(varianten, function(variante) {
+        return {
+            input: variante,
+            result: berechnen(variante.terms)
+        }
+    });
+
+} 
+var StartPage = React.createClass({
+    // Note that each Page must include the IntlMixin, otherwise the i18n data
+    // doesn't get passed down
+    mixins: [Router.Navigation, ReactIntl.IntlMixin],
+
+    getInitialState: function() {
+        return {
+            herrmann: variantenBerechnen(variantenHerrmann),
+            haspa: variantenBerechnen(variantenHaspa),
+            haspaBauspar: variantenBerechnen(variantenHaspaBauspar),
+            creditweb: variantenBerechnen(variantenCreditweb),
+            creditweb2: variantenBerechnen(variantenCreditweb2),
+            creditweb3: variantenBerechnen(variantenCreditweb3)
+        };
+    },
+      
+    render: function () {
+        /*
+         <h2>Creditweb - Risiko hoch</h2>
+            <Angebotstabelle data={this.state.creditweb}/>
+            <h2>Creditweb2 - Rate (zu) hoch, kein Risiko</h2>
+            <Angebotstabelle data={this.state.creditweb2}/>
+
+         */
+    return (
           <div className="container">
             <div className="lead">
                 <FormattedMessage message={this.getIntlMessage("WELCOME")}
                                   name="Nutzer" />
             </div>
-            <table>
-                <DataRow title="Bedingungen" variants={this.state.data} value={function(variant) {return variant.input.terms.label;}}/>
-                <DataRow title="Kreditbetrag" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag;}}/>
-                <DataRow title="Laufzeit (Jahre)" variants={this.state.data} value={concatTermInput.bind(this, function(terms) {return terms.laufzeit? terms.laufzeit.jahre : undefined})}/>
-                <DataRow title="Sollzins" variants={this.state.data} value={concatTermInput.bind(this, function(terms) {return terms.sollzins? terms.sollzins + ' %' : undefined})}/>
-                <DataRow className="emphazise" title="Monatsrate" variants={this.state.data} formatter={MonatsratenFormat} value={function(variant) {return variant.result.monatsraten;}}/>
-                <DataRow className="deemphazise" title="Monatsrate (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.monatsrate) : undefined;})}/>
-                <DataRow className="emphazise" title="Restschuld" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
-                <DataRow className="deemphazise" title="Restschuld (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.restschuld) : undefined;})}/>
-                
-                <DataRow title="Getilgt" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.getilgt;}}/>
-                
-                <DataRow title="Kosten (absolut)" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.kosten;}}/>
-                <DataRow className="emphazise" title="Kosten (% vom getilgten)" variants={this.state.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
-                <DataRow className="emphazise" title="CHECK" variants={this.state.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag - ( variant.result.getilgt + variant.result.restschuld);}}/>
-            </table>
-          </div>
-	);
+            <h2>Haspa</h2>
+            <Angebotstabelle data={this.state.haspa}/>
+            <h2>Herrmann 1 - Risiko viel zu hoch</h2>
+            <Angebotstabelle data={this.state.herrmann}/>
+           
+            <h2>Haspa Bauspar - Rate zu hoch, Risiko hoch</h2>
+            <Angebotstabelle data={this.state.haspaBauspar}/>
+            
+            <h2>Creditweb3 - Rate hoch,  Risiko beherrschbar</h2>
+            <Angebotstabelle data={this.state.creditweb3}/>
+        </div>
+    );
     }
 });
 
