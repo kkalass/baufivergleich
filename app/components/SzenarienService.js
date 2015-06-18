@@ -45,10 +45,7 @@ var mkStdAnschlussSzenarien = function (params) {
      {
          name: 'anschlussNichts',
          label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren)",
-         kredite: {
-             'hauptkredit': null,
-             'kfw': null
-         }
+         kredite: _.object(_.keys(laufzeiten).map(function(kreditName) {return [kreditName, null];}))
      }
      ];
     
@@ -545,7 +542,7 @@ var szenarien = [
         title: 'Haspa Bauspar - Angebot vom 28.05.2015',
         hide: false,
         bewertung: 'Schlecht',
-        begruendung: 'Sowieso schon recht hohe Raten, obwohl nur der KFW-Kredit Unsicherheit bringt, könnte das Haus nach 10 Jahren bei 12% auch ohne Tilgung nicht mehr haltbar sein (!), Rate nach 10 Jahren über 1300',
+        begruendung: 'Sowieso schon recht hohe Raten, obwohl nur der KFW-Kredit Unsicherheit bringt, könnte das Haus nach 10 Jahren bei 12% auch ohne Tilgung nicht mehr haltbar sein (!), Rate nach 10 Jahren auch im besten Fall über 1300',
         kredite: {
             "hauptkredit" : {
                 label: "Haspa Bauspar Hypoathekendarlehen - Angebot vom 28.05.2015",
@@ -616,7 +613,6 @@ var szenarien = [
         anschlussSzenarien: mkStdAnschlussSzenarien(
             {
                 laufzeit: {
-                    'hauptkredit': {jahre: 15},
                     'kfw': {jahre: 20}
                 },
                 'overrides': {
@@ -626,12 +622,6 @@ var szenarien = [
                                 prozentStart: 4.08
                             },
                             sollzins: 1.57
-                        },
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 5.566
-                            },
-                            sollzins: 2.47
                         }
                     },
                     'anschlussExpected': {
@@ -639,22 +629,12 @@ var szenarien = [
                             tilgung: {
                                 prozentStart: 2.796
                             }
-                        },
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 4.531
-                            }
                         }
                     },
                     'anschlussSehrSchlecht': {
                         'kfw': {
                             tilgung: {
                                 prozentStart: 1.16
-                            }
-                        },
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 2.425
                             }
                         }
                     }
