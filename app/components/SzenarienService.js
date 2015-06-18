@@ -2,8 +2,62 @@
 
 var _ = require('underscore');
 
+var mkStdAnschlussSzenarien = function (params) {
+    var laufzeiten = params.laufzeit;
+    
+    var overrides = params.overrides;
+    
+    var mkKredite = function(kreditNames, laufzeiten, overrides, config) {
+        var r = {};
+        kreditNames.map(function(kreditName) {
+            r[kreditName] = _.defaults((laufzeiten[kreditNames] ? {laufzeit: laufzeiten[kreditNames]} : {}), (overrides?overrides[kreditName]: null) || {}, config || {});
+        });
+        return r;
+    };
+    
+    
+    var result= [
+     {
+         name: 'anschlussEquivalent',
+         label: "Equivalente Anschlussfinanzierung",
+         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussEquivalent'], {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 2.00})
+     },
+     {
+         name: 'anschlussExpected',
+         label: "Erwartete Anschlussfinanzierung (5%)",
+         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussExpected'], {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 5.00})
+     },
+     {
+         name: 'anschlussExpectedUngetilgt',
+         label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
+         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussExpectedUngetilgt'], {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 5.00})
+     },
+     {
+         name: 'anschlussSehrSchlecht',
+         label: "Sehr schlechte Anschlussfinanzierung (12%)",
+         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussSehrSchlecht'], {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 12.00})
+     },
+     {
+         name: 'anschlussSehrSchlechtUngetilgt',
+         label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) ",
+         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussSehrSchlechtUngetilgt'], {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 12.00})
+     },
+     {
+         name: 'anschlussNichts',
+         label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren)",
+         kredite: {
+             'hauptkredit': null,
+             'kfw': null
+         }
+     }
+     ];
+    
+    console.log('Resultat: ', result);
+    return result;
+};
+
 var szenarien = [
-                 
+
     {
         title: 'Creditweb 1200 EUR Monatsrate',
         
@@ -57,84 +111,39 @@ var szenarien = [
                 }
             }
         ],
-        anschlussSzenarien: [
-             {
-                 name: 'anschlussEquivalent',
-                 label: "Equivalente Anschlussfinanzierung (2.47%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 8.825
-                         },
-                         sollzins: 2.47,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpected',
-                 label: "Erwartete Anschlussfinanzierung (5%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 7.725
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpectedUngetilgt',
-                 label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlecht',
-                 label: "Sehr schlechte Anschlussfinanzierung (12%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 5.215
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlechtUngetilgt',
-                 label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussNichts',
-                 label: "Ohne Anschlussfinanzierung (Restschuld nach 20 Jahren)",
-                 kredite: {
-                     'hauptkredit': null
-                 }
-             }
-        ]
+        
+        anschlussSzenarien: mkStdAnschlussSzenarien(
+            {
+                laufzeit: {
+                    'hauptkredit': {jahre: 10}
+                },
+                'overrides': {
+                    'anschlussEquivalent': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 8.825
+                            },
+                            sollzins: 2.47,
+                        }
+                    },
+                    'anschlussExpected': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 7.725
+                            }
+                        }
+                    },
+                    'anschlussSehrSchlecht': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 5.215
+                            }
+                        }
+                    }
+                }
+            }
+            
+        )
    
     }, 
     {
@@ -162,85 +171,38 @@ var szenarien = [
                 title: 'Keine Extra-Tilgungen'
             }
         ],
-        anschlussSzenarien: [
-             {
-                 name: 'anschlussEquivalent',
-                 label: "Equivalente Anschlussfinanzierung (2.47%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 8.825
-                         },
-                         sollzins: 2.47,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpected',
-                 label: "Erwartete Anschlussfinanzierung (5%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 7.725
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpectedUngetilgt',
-                 label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlecht',
-                 label: "Sehr schlechte Anschlussfinanzierung (12%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 5.215
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlechtUngetilgt',
-                 label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussNichts',
-                 label: "Ohne Anschlussfinanzierung (Restschuld nach 20 Jahren)",
-                 kredite: {
-                     'hauptkredit': null
-                 }
-             }
-        ]
-   
+        anschlussSzenarien: mkStdAnschlussSzenarien(
+            {
+                laufzeit: {
+                    'hauptkredit': {jahre: 10}
+                },
+                'overrides': {
+                    'anschlussEquivalent': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 8.825
+                            },
+                            sollzins: 2.47,
+                        }
+                    },
+                    'anschlussExpected': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 7.725
+                            }
+                        }
+                    },
+                    'anschlussSehrSchlecht': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 5.215
+                            }
+                        }
+                    }
+                }
+            }
+            
+        )
     },
     {
         title: 'Creditweb 3% Tilgung',
@@ -265,84 +227,38 @@ var szenarien = [
                 title: 'Keine Extra-Tilgungen'
             }
         ],
-        anschlussSzenarien: [
-             {
-                 name: 'anschlussEquivalent',
-                 label: "Equivalente Anschlussfinanzierung (2.47%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 8.825
-                         },
-                         sollzins: 2.47,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpected',
-                 label: "Erwartete Anschlussfinanzierung (5%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 7.725
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpectedUngetilgt',
-                 label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlecht',
-                 label: "Sehr schlechte Anschlussfinanzierung (12%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 5.215
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlechtUngetilgt',
-                 label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 10},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussNichts',
-                 label: "Ohne Anschlussfinanzierung (Restschuld nach 20 Jahren)",
-                 kredite: {
-                     'hauptkredit': null
-                 }
-             }
-        ]
+        anschlussSzenarien: mkStdAnschlussSzenarien(
+            {
+                laufzeit: {
+                    'hauptkredit': {jahre: 10}
+                },
+                'overrides': {
+                    'anschlussEquivalent': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 8.825
+                            },
+                            sollzins: 2.47,
+                        }
+                    },
+                    'anschlussExpected': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 7.725
+                            }
+                        }
+                    },
+                    'anschlussSehrSchlecht': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 5.215
+                            }
+                        }
+                    }
+                }
+            }
+            
+        )
    
     },
     {
@@ -392,124 +308,55 @@ var szenarien = [
                 
             }
         ],
-        anschlussSzenarien: [
-             {
-                 name: 'anschlussEquivalent',
-                 label: "Equivalente Anschlussfinanzierung (2.47%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 5.566
-                         },
-                         sollzins: 2.47,
-                     },
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 4.08
-                         },
-                         sollzins: 1.57,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpected',
-                 label: "Erwartete Anschlussfinanzierung (5%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 4.531
-                         },
-                         sollzins: 5.00,
-                     },
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 2.796
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpectedUngetilgt',
-                 label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 5.00,
-                     },
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlecht',
-                 label: "Sehr schlechte Anschlussfinanzierung (12%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 2.425
-                         },
-                         sollzins: 12.00,
-                     },
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 1.16
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlechtUngetilgt',
-                 label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 12.00,
-                     },
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussNichts',
-                 label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren)",
-                 kredite: {
-                     'hauptkredit': null,
-                     'kfw': null
-                 }
-             }
-        ]
+        anschlussSzenarien: mkStdAnschlussSzenarien(
+            {
+                laufzeit: {
+                    'hauptkredit': {jahre: 15},
+                    'kfw': {jahre: 20}
+                },
+                'overrides': {
+                    'anschlussEquivalent': {
+                        'kfw': {
+                            tilgung: {
+                                prozentStart: 4.08
+                            },
+                            sollzins: 1.57
+                        },
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 5.566
+                            },
+                            sollzins: 2.47
+                        }
+                    },
+                    'anschlussExpected': {
+                        'kfw': {
+                            tilgung: {
+                                prozentStart: 2.796
+                            }
+                        },
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 4.531
+                            }
+                        }
+                    },
+                    'anschlussSehrSchlecht': {
+                        'kfw': {
+                            tilgung: {
+                                prozentStart: 1.16
+                            }
+                        },
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 2.425
+                            }
+                        }
+                    }
+                }
+            }
+            
+        )
    
     },
     {
@@ -571,84 +418,127 @@ var szenarien = [
                 title: 'Keine Extra-Tilgungen'
             }
         ],
+        anschlussSzenarien: mkStdAnschlussSzenarien(
+            {
+                laufzeit: {
+                    'hauptkredit': {jahre: 15}
+                },
+                'overrides': {
+                    'anschlussEquivalent': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 5.655
+                            },
+                            sollzins: 2.15,
+                        }
+                    },
+                    'anschlussExpected': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 4.489
+                            }
+                        }
+                    },
+                    'anschlussSehrSchlecht': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 2.402
+                            }
+                        }
+                    }
+                }
+            }
+            
+        )
+   
+    },
+    {
+        title: 'Volksbank Stormarn 30 Jahre Volltilgung, 2.92 %',
+        hide: true,
+        bewertung: 'Schlecht',
+        begruendung: 'Rate zu hoch und würde sich eh nur lohnen, wenn der Zinssatz deutlich über dem von mir erwarteten liegen würde',
+        kredite: {
+            "hauptkredit" : {
+                laufzeit: {jahre: 30},
+                startzeit: {monat: 7, jahr: 2015},
+                betrag: 320000,
+                sollzins: 2.92,
+                tilgung: {
+                    prozentStart: 2.0876
+                }
+                
+            }
+        },
+        tilgungsSzenarien: [
+            {
+                title: 'Keine Extra-Tilgungen'
+            }
+        ],
         anschlussSzenarien: [
              {
-                 name: 'anschlussEquivalent',
-                 label: "Equivalente Anschlussfinanzierung (2.15%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 5.655
-                         },
-                         sollzins: 2.15,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpected',
-                 label: "Erwartete Anschlussfinanzierung (5%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 4.489
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpectedUngetilgt',
-                 label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlecht',
-                 label: "Sehr schlechte Anschlussfinanzierung (12%) => 30 Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 2.402
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlechtUngetilgt',
-                 label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) => 30++ Jahre",
-                 kredite: {
-                     'hauptkredit': {
-                         laufzeit: {jahre: 15},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
                  name: 'anschlussNichts',
-                 label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren",
+                 label: " Anschlussfinanzierung nicht nötig, voll getilgt",
                  kredite: {
                      'hauptkredit': null
                  }
              }
         ]
+   
+    },
+    {
+        title: 'Volksbank Stormarn 30 Jahre mit Restschuld und niedriger Rate, 2.92 %',
+        hide: true,
+        bewertung: 'Sehr Schlecht',
+        begruendung: 'Restschuld führt wieder zu Unsicherheit, bei 12% wäre wieder Zwangsvollstreckung wahrscheinlich ...',
+        kredite: {
+            "hauptkredit" : {
+                laufzeit: {jahre: 30},
+                startzeit: {monat: 7, jahr: 2015},
+                betrag: 320000,
+                sollzins: 2.92,
+                tilgung: {
+                    monatsrate: 1100
+                }
+                
+            }
+        },
+        tilgungsSzenarien: [
+            {
+                title: 'Keine Extra-Tilgungen'
+            }
+        ],
+        anschlussSzenarien: mkStdAnschlussSzenarien(
+            {
+                laufzeit: {
+                    'hauptkredit': {jahre: 15}
+                },
+                'overrides': {
+                    'anschlussEquivalent': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 5.655
+                            },
+                            sollzins: 2.15,
+                        }
+                    },
+                    'anschlussExpected': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 4.489
+                            }
+                        }
+                    },
+                    'anschlussSehrSchlecht': {
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 2.402
+                            }
+                        }
+                    }
+                }
+            }
+            
+        )
    
     },
     {
@@ -723,84 +613,55 @@ var szenarien = [
                 title: 'Keine Extra-Tilgungen'
             }
         ],
-        anschlussSzenarien: [
-             {
-                 name: 'anschlussEquivalent',
-                 label: "Equivalente KFW Anschlussfinanzierung (1.57%) => 30 Jahre",
-                 kredite: {
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 4.08
-                         },
-                         sollzins: 1.57,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpected',
-                 label: "Erwartete KFW Anschlussfinanzierung (5%) => 30 Jahre",
-                 kredite: {
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 2.796
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussExpectedUngetilgt',
-                 label: "Erwartete KFW Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
-                 kredite: {
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 5.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlecht',
-                 label: "Sehr schlechte KFW Anschlussfinanzierung (12%) => 30 Jahre",
-                 kredite: {
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             //restschuld: 0
-                             prozentStart: 1.16
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussSehrSchlechtUngetilgt',
-                 label: "Sehr schlechte KFW Anschlussfinanzierung *UNGETILGT* (12%) => 30++ Jahre",
-                 kredite: {
-                     'kfw': {
-                         laufzeit: {jahre: 20},
-                         tilgung: {
-                             prozentStart: 0
-                         },
-                         sollzins: 12.00,
-                     }
-                 }
-             },
-             {
-                 name: 'anschlussNichts',
-                 label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren)",
-                 kredite: {
-                     'kfw': null
-                 }
-             }
-        ]
+        anschlussSzenarien: mkStdAnschlussSzenarien(
+            {
+                laufzeit: {
+                    'hauptkredit': {jahre: 15},
+                    'kfw': {jahre: 20}
+                },
+                'overrides': {
+                    'anschlussEquivalent': {
+                        'kfw': {
+                            tilgung: {
+                                prozentStart: 4.08
+                            },
+                            sollzins: 1.57
+                        },
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 5.566
+                            },
+                            sollzins: 2.47
+                        }
+                    },
+                    'anschlussExpected': {
+                        'kfw': {
+                            tilgung: {
+                                prozentStart: 2.796
+                            }
+                        },
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 4.531
+                            }
+                        }
+                    },
+                    'anschlussSehrSchlecht': {
+                        'kfw': {
+                            tilgung: {
+                                prozentStart: 1.16
+                            }
+                        },
+                        'hauptkredit': {
+                            tilgung: {
+                                prozentStart: 2.425
+                            }
+                        }
+                    }
+                }
+            }
+            
+        )
    
     }
 ];

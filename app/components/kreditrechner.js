@@ -206,6 +206,11 @@ var hypothekendarlehen = function(input) {
     } else if (tilgung.monatsrate !== undefined) {
         monatsrate = tilgung.monatsrate;
     } else {
+        /*
+         * b1 = (b0 * (1-tilgung));
+         * 
+         */
+        // (b1 - (b1 * tilgung))
         throw "tilgung not yet supported: " + JSON.stringify(tilgung);
     }
     
