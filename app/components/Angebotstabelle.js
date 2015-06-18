@@ -94,6 +94,7 @@ var Angebotstabelle = React.createClass({
                 <DataRow className="deemphazise" title="Monatsrate (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.monatsrate) : undefined;})}/>
                 <DataRow className="deemphazise" title="Restschuld (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.restschuld) : undefined;})}/>
 
+<DataRow title="Getilgt" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.getilgt;}}/>
  */    
     render: function () {
     return (
@@ -101,12 +102,12 @@ var Angebotstabelle = React.createClass({
                 <DataRow title="Anschlussszenario" className="title" variants={this.props.data} value={function(variant) {return variant.input.terms.label;}}/>
                 <DataRow title="Kreditbetrag" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag;}}/>
                 <DataRow className="emphazise" title="Monatsrate" variants={this.props.data} formatter={MonatsratenFormat} value={function(variant) {return variant.result.monatsraten;}}/>
-                <DataRow className="emphazise" title="Restschuld" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
+                <DataRow title="Restschuld" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
                 
-                <DataRow title="Getilgt" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.getilgt;}}/>
+                
                 
                 <DataRow title="Kosten (absolut)" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.kosten;}}/>
-                <DataRow className="emphazise" title="Kosten (% vom getilgten)" variants={this.props.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
+                <DataRow  title="Kosten (% vom getilgten)" variants={this.props.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
             </table>
           
     );
