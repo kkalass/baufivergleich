@@ -59,13 +59,13 @@ var mehrereBerechnnen = function(fkt, kredite) {
 var berechnen = function(input) {
     var result;
     if (!_.isArray(input) && !_.isArray(input.kredite)) {
-        console.log('Berechne', input)
+        //console.log('Berechne', input)
         result = input.type === "bauspar" ? bausparvertrag(input) : hypothekendarlehen(input);
     } else {
         var kreditResult = mehrereBerechnnen(berechnen, _.isArray(input) ? input : input.kredite);
         result = withProzentGetilgt(kreditResult);
     }
-    console.log('Kreditberechnung: ', input, " => ", result);
+    //console.log('Kreditberechnung: ', input, " => ", result);
     return result;
 };
 
@@ -188,6 +188,44 @@ var bausparvertrag = function(input) {
     }
 };
 
+var monatsrateFromRestschuld = function(betrag, sollzins, months, restschuld) {
+    /*
+     * b1 = (b0 * (1-tilgung));
+     * 
+     * betrag0 * (zinssatz + tilgungssatzInitial) = monatsrate;
+     * betrag1 = betrag0 - (monatsrate - betrag0*zinssatz);
+     * betrag1 = betrag0 - monatsrate + betrag0*zinssatz;
+     * betrag1 = betrag0 + betrag0*zinssatz - monatsrate ;
+     * betrag1 = betrag0*(1 + zinssatz) - monatsrate ;
+     * 
+     * betrag2 =  betrag1*(1 + zinssatz) - monatsrate;
+     * betrag3 =  betrag2*(1 + zinssatz) - monatsrate
+     * 
+     * 
+     * betrag3 =  (betrag1*(1 + zinssatz) - monatsrate)*(1 + zinssatz) - monatsrate
+     * betrag3 =  betrag1*(1 + zinssatz)*(1 + zinssatz) - monatsrate*(1 + zinssatz) - monatsrate
+     * betrag3 =  (betrag0*(1 + zinssatz) - monatsrate)*(1 + zinssatz)*(1 + zinssatz) - monatsrate*(1 + zinssatz) - monatsrate
+     * betrag3 =  betrag0*(1 + zinssatz)*(1 + zinssatz)*(1 + zinssatz) - monatsrate*(1 + zinssatz)*(1 + zinssatz) - monatsrate*(1 + zinssatz) - monatsrate
+     * 
+     * betrag3 =  betrag0*(1 + zinssatz)^3 - monatsrate*(1 + zinssatz)^2 - monatsrate*(1 + zinssatz)^1 - monatsrate*(1 + zinssatz)^0
+     *
+     *  betrag3 =  betrag0*(1 + zinssatz)^3 - monatsrate*((1 + zinssatz)^2 + (1 + zinssatz)^1 + (1 + zinssatz)^0)
+     *  
+     *  monatsrate*((1 + zinssatz)^2 + (1 + zinssatz)^1 + (1 + zinssatz)^0) = betrag0*(1 + zinssatz)^3 - betrag3
+     *  monatsrate = (betrag0*(1 + zinssatz)^3 - betrag3) / ((1 + zinssatz)^2 + (1 + zinssatz)^1 + (1 + zinssatz)^0);
+     *  
+     *  monatsrate = (betrag*monatsSollzinsP^3 - restschuld) / (monatsSollzinsP^2 + monatsSollzinsP^1 + 1);
+     */
+    var monatsSollzinsP = 1.0 + (sollzins/12.0)/100.00;
+    var d = 1;
+    for (var m = 1; m < months; m++) {
+        d += Math.pow(monatsSollzinsP, m);
+    }
+    var r = (betrag*Math.pow(monatsSollzinsP, months) - restschuld) / d;
+    console.log("(",betrag,"*Math.pow(",monatsSollzinsP,", ", months,") - ",restschuld,") / ",d,";", " => ", r);
+    return r;
+};
+
 var hypothekendarlehen = function(input) {
     var years = input.laufzeit.jahre;// 20,
     var startMonths = laufzeitToMonths(input.startzeit);
@@ -205,12 +243,10 @@ var hypothekendarlehen = function(input) {
         monatsrate = Math2.runden(yearly / 12.0);
     } else if (tilgung.monatsrate !== undefined) {
         monatsrate = tilgung.monatsrate;
+    } else if (tilgung.restschuld !== undefined) {
+        monatsrate = monatsrateFromRestschuld(betrag, sollzins, monate, tilgung.restschuld);
     } else {
-        /*
-         * b1 = (b0 * (1-tilgung));
-         * 
-         */
-        // (b1 - (b1 * tilgung))
+        
         throw "tilgung not yet supported: " + JSON.stringify(tilgung);
     }
     

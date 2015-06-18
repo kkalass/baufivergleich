@@ -48,8 +48,6 @@ var mkStdAnschlussSzenarien = function (params) {
          kredite: _.object(_.keys(laufzeiten).map(function(kreditName) {return [kreditName, null];}))
      }
      ];
-    
-    console.log('Resultat: ', result);
     return result;
 };
 
@@ -117,24 +115,13 @@ var szenarien = [
                 'overrides': {
                     'anschlussEquivalent': {
                         'hauptkredit': {
+                            // you can override whatever you want
+                            /*
                             tilgung: {
                                 prozentStart: 8.825
                             },
+                            */
                             sollzins: 2.47,
-                        }
-                    },
-                    'anschlussExpected': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 7.725
-                            }
-                        }
-                    },
-                    'anschlussSehrSchlecht': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 5.215
-                            }
                         }
                     }
                 }
@@ -142,7 +129,7 @@ var szenarien = [
             
         )
    
-    }, 
+    },
     {
         title: 'Creditweb 1280 EUR Monatsrate',
         
@@ -176,24 +163,7 @@ var szenarien = [
                 'overrides': {
                     'anschlussEquivalent': {
                         'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 8.825
-                            },
                             sollzins: 2.47,
-                        }
-                    },
-                    'anschlussExpected': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 7.725
-                            }
-                        }
-                    },
-                    'anschlussSehrSchlecht': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 5.215
-                            }
                         }
                     }
                 }
@@ -231,25 +201,7 @@ var szenarien = [
                 },
                 'overrides': {
                     'anschlussEquivalent': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 8.825
-                            },
-                            sollzins: 2.47,
-                        }
-                    },
-                    'anschlussExpected': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 7.725
-                            }
-                        }
-                    },
-                    'anschlussSehrSchlecht': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 5.215
-                            }
+                        'hauptkredit': {sollzins: 2.47,
                         }
                     }
                 }
@@ -314,40 +266,10 @@ var szenarien = [
                 'overrides': {
                     'anschlussEquivalent': {
                         'kfw': {
-                            tilgung: {
-                                prozentStart: 4.08
-                            },
                             sollzins: 1.57
                         },
                         'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 5.566
-                            },
                             sollzins: 2.47
-                        }
-                    },
-                    'anschlussExpected': {
-                        'kfw': {
-                            tilgung: {
-                                prozentStart: 2.796
-                            }
-                        },
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 4.531
-                            }
-                        }
-                    },
-                    'anschlussSehrSchlecht': {
-                        'kfw': {
-                            tilgung: {
-                                prozentStart: 1.16
-                            }
-                        },
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 2.425
-                            }
                         }
                     }
                 }
@@ -423,24 +345,7 @@ var szenarien = [
                 'overrides': {
                     'anschlussEquivalent': {
                         'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 5.655
-                            },
                             sollzins: 2.15,
-                        }
-                    },
-                    'anschlussExpected': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 4.489
-                            }
-                        }
-                    },
-                    'anschlussSehrSchlecht': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 2.402
-                            }
                         }
                     }
                 }
@@ -512,24 +417,7 @@ var szenarien = [
                 'overrides': {
                     'anschlussEquivalent': {
                         'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 5.655
-                            },
-                            sollzins: 2.15,
-                        }
-                    },
-                    'anschlussExpected': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 4.489
-                            }
-                        }
-                    },
-                    'anschlussSehrSchlecht': {
-                        'hauptkredit': {
-                            tilgung: {
-                                prozentStart: 2.402
-                            }
+                            sollzins: 2.92,
                         }
                     }
                 }
@@ -540,7 +428,7 @@ var szenarien = [
     },
     {
         title: 'Haspa Bauspar - Angebot vom 28.05.2015',
-        hide: false,
+        hide: true,
         bewertung: 'Schlecht',
         begruendung: 'Sowieso schon recht hohe Raten, obwohl nur der KFW-Kredit Unsicherheit bringt, könnte das Haus nach 10 Jahren bei 12% auch ohne Tilgung nicht mehr haltbar sein (!), Rate nach 10 Jahren auch im besten Fall über 1300',
         kredite: {
@@ -618,24 +506,7 @@ var szenarien = [
                 'overrides': {
                     'anschlussEquivalent': {
                         'kfw': {
-                            tilgung: {
-                                prozentStart: 4.08
-                            },
                             sollzins: 1.57
-                        }
-                    },
-                    'anschlussExpected': {
-                        'kfw': {
-                            tilgung: {
-                                prozentStart: 2.796
-                            }
-                        }
-                    },
-                    'anschlussSehrSchlecht': {
-                        'kfw': {
-                            tilgung: {
-                                prozentStart: 1.16
-                            }
                         }
                     }
                 }

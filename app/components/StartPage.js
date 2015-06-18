@@ -107,7 +107,9 @@ var StartPage = React.createClass({
     mixins: [Router.Navigation, ReactIntl.IntlMixin],
 
     getInitialState: function() {
-        var szenarien = _.filter(SzenarienService.getStoredScenarios(), FILTER_HIDDEN).map(unfoldScenario);
+        var stored = _.filter(SzenarienService.getStoredScenarios(), FILTER_HIDDEN);
+        //var stored = SzenarienService.getStoredScenarios();
+        var szenarien = stored.map(unfoldScenario);
         
         return {szenarien: szenarien.map(function (szenario) {
             return {
