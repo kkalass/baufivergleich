@@ -32,3 +32,8 @@ table.angebote >tbody> tr > th {
     
     width: 200px;
 }
+
+table.angebote >tbody> tr > td table {
+   
+    width: 100%;
+}

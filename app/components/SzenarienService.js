@@ -92,7 +92,12 @@ var HaspaBausparDarlehen = {
         effektivzins: 2.31
     }
 };
-
+var variantenHaspa = [ 
+                  {terms: {
+                      label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren)",
+                      kredite: [HaspaAnnu, HaspaKFW]
+                  }}
+                  ];
 var variantenNicole = [ 
                          
          {terms: {
@@ -389,9 +394,61 @@ var szenarien = [
              }
         ]
    
-    } 
+    }, 
+    {
+        title: 'Haspa Annuitäten',
+        kredite: {
+            "hauptkredit" : {
+                label: "Haspa Annuitätendarlehen - Angebot vom 28.05.2015",
+                laufzeit: {jahre: 15},
+                startzeit: {monat: 6, jahr: 2015},
+                betrag: 270000,
+                sollzins: 2.25,
+                tilgung: {
+                    prozentStart: 2.00
+                },
+                erwartet: {
+                    monatsrate: 956.25,
+                    restschuld: 173760.75,
+                    effektivzins: 2.27
+                }
+            },
+            "kfw": { 
+                label: "Haspa Annuitätendarlehen - KFW - Angebot vom 28.05.2015",
+                laufzeit: {jahre: 10},
+                startzeit: {monat: 6, jahr: 2015},
+                betrag: 50000,
+                sollzins: 1.55,
+                tilgungVerzögerungMonate: 12, // 'Freijahre' in den Bedingungen - in dieser Zeit wird nicht getilgt
+                tilgung: {
+                    prozentStart: 2.24
+                },
+                
+                erwartet: {
+                    monatsrate: 157.92,
+                    restschuld: 39190.17,
+                    effektivzins: 1.56
+                }
+            }
+        },
+        tilgungsSzenarien: [
+            {
+                title: 'Keine Extra-Tilgungen'
+            }
+        ],
+        anschlussSzenarien: [
+             {
+                 name: 'anschlussNichts',
+                 label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren",
+                 kredite: {
+                     'hauptkredit': null,
+                     'kfw': null
+                 }
+             }
+        ]
+   
+    }
 ];
-
 
 
 module.exports = {

@@ -42,7 +42,7 @@ var MonatsratenFormat = function(monatsraten) {
         }
         return memo;
     }, []);
-    return (<table>{combinedMonatsraten.map(function(monatsrate) {
+    return (<table >{combinedMonatsraten.map(function(monatsrate) {
         return (<tr><td>{monatsrate.monthStart}</td><td>&nbsp;-&nbsp;</td><td>{monatsrate.monthEnd}</td><td>:&nbsp;</td><td><FormattedMessage message="{total, number, eur}" total={monatsrate.value} /></td></tr>);
     })}</table>);
 };

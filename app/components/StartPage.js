@@ -71,9 +71,11 @@ var unfoldScenario = function (szenario) {
                         label: a.label, 
                         kredite: _.map(kredite, function(kreditdetails, kreditname) {
                             var kredit = _.clone(kreditdetails);
-                            var tilgungsOverride = tilgungszenario.kredite[kreditname];
+                            var tilgungsOverride = tilgungszenario.kredite ? tilgungszenario.kredite[kreditname] : null;
                             
-                            overrideKreditTilgung(kredit, tilgungsOverride);
+                            if (tilgungsOverride) {
+                                overrideKreditTilgung(kredit, tilgungsOverride);    
+                            }
                             
                             var anschlussOverride = a.kredite[kreditname];
                             kredit.abloesung = anschlussOverride ? _.clone(anschlussOverride) : null;
