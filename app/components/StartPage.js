@@ -1,23 +1,3 @@
-"use strict";
-
-var React = require("react");
-var Router = require("react-router");
-
-var ReactIntl = require("react-intl");
-var FormattedMessage = ReactIntl.FormattedMessage;
-var Angebotstabelle = require("./Angebotstabelle");
-var _ = require("underscore");
-var Math2 = require("./math2");
-var Kreditrechner = require("./kreditrechner");
-var SzenarienService = require("./SzenarienService");
-
-/*
- * Next Steps
- * 
- * - Anschlussfinanzierung generell lösen und Worst-Case Beispiele rechnen lassen, auch um meine Kosten-Berechnung zu prüfen
- * - Berechnung fixen, so dass die Ergebnisse mit den Haspa-Ergebnissen korrelieren
- * - Weitere Finanzierungsszenarien einspielen
- */
 
 /*
  Kriterien zum Beurteilen von Immobilienfinanzierungsangeboten:
@@ -47,6 +27,22 @@ Add Ons:
  - szenario 'eigener Bausparvertrag für Extratilgung'. Um guten Zinssatz der Anschlussfinanzierung zu bekommen?
  */
 
+"use strict";
+
+var React = require("react");
+var Router = require("react-router");
+
+var ReactIntl = require("react-intl");
+var FormattedMessage = ReactIntl.FormattedMessage;
+var Angebotstabelle = require("./Angebotstabelle");
+var _ = require("underscore");
+var Math2 = require("./math2");
+var Kreditrechner = require("./kreditrechner");
+var SzenarienService = require("./SzenarienService");
+
+
+var FILTER_HIDDEN = function(t) {return !t.hide;};
+
 var overrideKreditTilgung = function (kredit, tilgungsOverride) {
     if (tilgungsOverride && tilgungsOverride.tilgung) {
         kredit.tilgung = _.clone(tilgungsOverride.tilgung);    
@@ -55,7 +51,6 @@ var overrideKreditTilgung = function (kredit, tilgungsOverride) {
         kredit.extraTilgung = _.clone(tilgungsOverride.extra);    
     }
 };
-var FILTER_HIDDEN = function(t) {return !t.hide;};
 
 var unfoldScenario = function (szenario) {
     var anschluss = _.filter(szenario.anschlussSzenarien, FILTER_HIDDEN);
@@ -116,30 +111,6 @@ var StartPage = React.createClass({
                 })
             }
         })};
-        /*
-        var varianten = SzenarienService.getVarianten();
-        return {szenarien:[ 
-            {
-                title: "Creditweb3 - Rate hoch,  Risiko beherrschbar",
-                tilgungszenarien: [
-                   {
-                       title: "Sparszenario: keine Extratilgungen",
-                       werte: Kreditrechner.berechnen(varianten.creditweb3)
-                   }
-                ],
-            },
-            {
-                title: "Creditweb - Risiko hoch",
-                tilgungszenarien: [
-                   {
-                       title: "Sparszenario: keine Extratilgungen",
-                       werte: Kreditrechner.berechnen(varianten.creditweb)
-                   }
-                ],
-            }
-
-        ]};
-        */
     },
       
     render: function () {
