@@ -194,13 +194,20 @@ var hypothekendarlehen = function(input) {
     
     var monate = laufzeitToMonths(input.laufzeit);
     var betrag = input.betrag;// 317000,
-    var tilgung = input.tilgung;// 2.0,
+    var tilgung = input.tilgung;// {prozentStart: 2.0, restschuld: 0, monatsrate: 1200}
     var tilgungVerzögerungMonate = input.tilgungVerzögerungMonate || 0;
     var sollzins = input.sollzins;// 2.47,
     var effektivzins = input.effektivzins;// 2.50,
     
-    var yearly = betrag * ((tilgung+sollzins)/100.0);
-    var monatsrate = tilgung === undefined ? input.monatsrate : Math2.runden(yearly / 12.0);
+    var monatsrate;
+    if (tilgung.prozentStart !== undefined) {
+        var yearly = betrag * ((tilgung.prozentStart+sollzins)/100.0);
+        monatsrate = Math2.runden(yearly / 12.0);
+    } else if (tilgung.monatsrate !== undefined) {
+        monatsrate = tilgung.monatsrate;
+    } else {
+        throw "tilgung not yet supported: " + JSON.stringify(tilgung);
+    }
     
     var kosten = 0;
     

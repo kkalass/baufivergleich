@@ -14,6 +14,7 @@ table.angebote >tbody> tr > td {
     padding: 10pt;
     border-left: black solid 1pt;
     width: 300px;
+    text-align: right;
 }
 table.angebote >tbody> tr:last-child > td, table.angebote >tbody> tr:last-child > th {
     border-bottom: black solid 1pt;
@@ -23,6 +24,7 @@ table.angebote >tbody> tr.title > td, table.angebote >tbody> tr.title > th {
     border-top: black solid 1pt;
     border-bottom: black solid 1pt;
     font-style: italic;
+    text-align: left;
 }
 
 table.angebote >tbody> tr > th {
