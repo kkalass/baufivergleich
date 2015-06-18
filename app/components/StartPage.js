@@ -60,6 +60,8 @@ var unfoldScenario = function (szenario) {
     
     return {
         title: title,
+        bewertung: szenario.bewertung,
+        begruendung: szenario.begruendung,
         szenarien: _.filter(tilgungen, FILTER_HIDDEN).map(function(anschluss, kredite, tilgungszenario) {
             var varianten = anschluss.map(function(a) {
                 return {
@@ -110,6 +112,8 @@ var StartPage = React.createClass({
         return {szenarien: szenarien.map(function (szenario) {
             return {
                 title: szenario.title,
+                bewertung: szenario.bewertung,
+                begruendung: szenario.begruendung,
                 tilgungszenarien: szenario.szenarien.map(function(child) {
                     return {title: child.title, werte: Kreditrechner.berechnen(child.werte)};
                 })
@@ -124,6 +128,11 @@ var StartPage = React.createClass({
                 return (
                     <div>
                         <h2>{szenario.title}</h2>
+                        <table>
+                            <tr><th>Bewertung&nbsp;</th><td>{szenario.bewertung}</td></tr>
+                            <tr><th>Begründung&nbsp;</th><td>{szenario.begruendung}</td></tr>
+                            <tr><th>Verstecken&nbsp;</th><td>{szenario.hide?'Ja':'Nein'}</td></tr>
+                        </table>
                         {szenario.tilgungszenarien.map(function (ts) {
                             return (
                                 <div>
