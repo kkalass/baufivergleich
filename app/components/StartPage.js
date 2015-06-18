@@ -73,8 +73,12 @@ var unfoldScenario = function (szenario) {
                                 overrideKreditTilgung(kredit, tilgungsOverride);    
                             }
                             
-                            var anschlussOverride = a.kredite[kreditname];
-                            kredit.abloesung = anschlussOverride ? _.clone(anschlussOverride) : null;
+                            
+                            if ((typeof a.kredite[kreditname]) !== 'undefined') {
+                                var anschlussOverride = a.kredite[kreditname];
+                                kredit.abloesung = anschlussOverride ? _.clone(anschlussOverride) : null;
+                            }
+                            
                             
                             if (tilgungsOverride && tilgungsOverride.anschluss && tilgungsOverride.anschluss[a.name]) {
                                 var anschlussTilgungsOverride = tilgungsOverride.anschluss[a.name];
