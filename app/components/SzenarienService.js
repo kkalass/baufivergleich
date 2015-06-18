@@ -306,6 +306,7 @@ var szenarien = [
             },
             {
                 title: '3%, keine Extra-Tilgungen',
+                hide: true,
                 kredite: {
                     'hauptkredit': {
                         tilgung: {
@@ -397,6 +398,7 @@ var szenarien = [
     }, 
     {
         title: 'Haspa Annuitäten',
+        hide: true,
         kredite: {
             "hauptkredit" : {
                 label: "Haspa Annuitätendarlehen - Angebot vom 28.05.2015",
@@ -434,6 +436,7 @@ var szenarien = [
         tilgungsSzenarien: [
             {
                 title: 'Keine Extra-Tilgungen'
+                
             }
         ],
         anschlussSzenarien: [

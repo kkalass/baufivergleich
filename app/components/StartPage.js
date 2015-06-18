@@ -55,16 +55,17 @@ var overrideKreditTilgung = function (kredit, tilgungsOverride) {
         kredit.extraTilgung = _.clone(tilgungsOverride.extra);    
     }
 };
+var FILTER_HIDDEN = function(t) {return !t.hide;};
 
 var unfoldScenario = function (szenario) {
-    var anschluss = szenario.anschlussSzenarien;
+    var anschluss = _.filter(szenario.anschlussSzenarien, FILTER_HIDDEN);
     var tilgungen = szenario.tilgungsSzenarien;
     var title = szenario.title;
     var kredite = szenario.kredite;
     
     return {
         title: title,
-        szenarien: tilgungen.map(function(anschluss, kredite, tilgungszenario) {
+        szenarien: _.filter(tilgungen, FILTER_HIDDEN).map(function(anschluss, kredite, tilgungszenario) {
             var varianten = anschluss.map(function(a) {
                 return {
                     terms: {
@@ -105,7 +106,7 @@ var StartPage = React.createClass({
     mixins: [Router.Navigation, ReactIntl.IntlMixin],
 
     getInitialState: function() {
-        var szenarien = SzenarienService.getStoredScenarios().map(unfoldScenario);
+        var szenarien = _.filter(SzenarienService.getStoredScenarios(), FILTER_HIDDEN).map(unfoldScenario);
         
         return {szenarien: szenarien.map(function (szenario) {
             return {
