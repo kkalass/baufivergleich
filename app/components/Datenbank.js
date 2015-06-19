@@ -262,7 +262,7 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 1 - 18.06.2015 - 40 Jahre',
-         hide: false,
+         hide: true,
          bewertung: 'Sehr Schlecht',
          // FIXME: Sondertilgungsszenarien mit einbauen - so hatte Frau Herrmann das wohl gemeint - das könnte uns etwas Flexibilität geben
          begruendung: 'Sehr hohe Restschuld nach 20 Jahren , schon bei 5% ungetilgter Anschlussfinanzierung steigt die Monatsrate, sehr sehr hohes Risiko',
@@ -297,7 +297,7 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 2  - 18.06.2015 - Bausparkombi',
-         hide: false,
+         hide: true,
          bewertung: 'Sehr Schlecht',
 
          begruendung: 'Macht überhaupt keinen Sinn - war das überhaupt so gemeint? Ist mir etwas unklar',
@@ -375,15 +375,15 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 3 - Konstantdarlehen - 18.06.2015 - 30 Jahre',
-         hide: false,
-         bewertung: 'Evtl. Machbar',
-         begruendung: 'Ähnlich dem Konstantdarlehen bei Creditweb, aber sehr viel bessere Konditionen. Habe allerdings starke Zweifel, dass sie die so realisieren kann.',
+         hide: true,
+         bewertung: 'Evtl. machbar',
+         begruendung: 'Ähnlich dem Konstantdarlehen bei Creditweb, ursprünglich hatte sie uns 2.15 angegeben, auf Nachfrage das aber auf 2.51 korrigiert',
          kredite: {
              "hauptkredit" : {
                  laufzeit: {jahre: 20},
                  startzeit: {monat: 7, jahr: 2015},
                  betrag: 326000,
-                 sollzins: 2.15,
+                 sollzins: 2.51,
                  tilgung: {
                      prozentStart: 2.5
                  }
@@ -400,7 +400,7 @@ var daten = {
              'overrides': {
                  'anschlussEquivalent': {
                      'hauptkredit': {
-                         sollzins: 2.15,
+                         sollzins: 2.51,
                      }
                  }
              }
