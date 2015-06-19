@@ -1,3 +1,11 @@
+/*
+ * Next Steps:
+ *
+ *  - Informativere Ausgabe, kreditkonzept anzeigen
+ *  - Tilgungsszenarien einbauen
+ *  - Detailseite zu Angeboten (incl. abgelehnte)
+ */
+
 
 /*
  Kriterien zum Beurteilen von Immobilienfinanzierungsangeboten:
@@ -221,34 +229,44 @@ var StartPage = React.createClass({
     getInitialState: function() {
         var data = Datenbank.get();
 
-        var angebote = data.angebote;
+        var angebote = _.clone(data.angebote);
+        angebote.sort(function (a1, a2) {
+            if (!!a1.abgelehnt != !!a2.abgelehnt) {
+                return a1.abgelehnt ? 1 : -1;
+            }
+            return a1.title < a2.title ? -1 : (a1.title > a2.title ? 1 : 0); 
+        });
         
         var angeboteUnfolded = angebote.map(unfoldScenario.bind(this, data.szenarien));
         
-        return {angebote: angeboteUnfolded.map(function (angebot) {
-            return {
-                abgelehnt: angebot.abgelehnt,
-                title: angebot.title,
-                bewertung: angebot.bewertung,
-                begruendung: angebot.begruendung,
-                tilgungszenarien: angebot.szenarien.map(function(child) {
-                    return {title: child.title, werte: Kreditrechner.berechnen(child.werte)};
-                })
-            }
-        })};
+        return {
+            maxMonatsrate: 1280,
+            angebote: angeboteUnfolded.map(function (angebot) {
+                return {
+                    abgelehnt: angebot.abgelehnt,
+                    title: angebot.title,
+                    bewertung: angebot.bewertung,
+                    begruendung: angebot.begruendung,
+                    tilgungszenarien: angebot.szenarien.map(function(child) {
+                        return {title: child.title, werte: Kreditrechner.berechnen(child.werte)};
+                    })
+                }
+            })
+        };
     },
       
+    
     render: function () {
     return (
           <div className="container">
             {this.state.angebote.map(function(angebot) {
-                if (angebot.abgelehnt) {
+                if (!this.props.showAll && angebot.abgelehnt) {
                     return (<div className="angebot abgelehnt">
-                        <a href="#" title={angebot.begruendung}>{angebot.title}</a>
+                        <a href="#/all" title={angebot.begruendung}>{angebot.title}</a>
                     </div>);
                 }
                 return (
-                    <div className="angebot">
+                    <div className={angebot.abgelehnt ? "angebot abgelehnt" : "angebot"}>
                         <h2>{angebot.title}</h2>
                         <table>
                             <tr><th>Bewertung&nbsp;</th><td>{angebot.bewertung}</td></tr>
@@ -258,13 +276,13 @@ var StartPage = React.createClass({
                             return (
                                 <div>
                                 <h3>{ts.title}</h3>
-                                <Angebotstabelle data={ts.werte} />
+                                <Angebotstabelle maxMonatsrate={this.state.maxMonatsrate} data={ts.werte} />
                                 </div>
                             );
-                        })}
+                        }.bind(this))}
                     </div>
                 );
-            })}
+            }.bind(this))}
         </div>
     );
     }

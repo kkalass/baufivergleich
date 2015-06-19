@@ -19,10 +19,18 @@ var formats = {
     }
 };
 
+var AllPage = React.createClass({
+    render: function () {
+      return (
+          <StartPage showAll="true" />
+      );
+    }
+  });
+
 var routes = (
   <Route name="app" path="/" handler={AppComponent}>
     <DefaultRoute handler={StartPage} />
-    
+    <Route path="all" handler={AllPage}/>
   </Route>
 );
 

@@ -12,7 +12,7 @@ var PriceFormat = function (value) {
     );
 };
  
-var MonatsratenFormat = function(monatsraten) {
+var MonatsratenFormat = function(maxMonatsrate, monatsraten) {
     var ratespermonth = _.reduce(monatsraten, function(memo, monatsrate) {
         var start = monatsrate.monthStart;
         var end = monatsrate.monthEnd;
@@ -43,7 +43,15 @@ var MonatsratenFormat = function(monatsraten) {
         return memo;
     }, []);
     return (<table >{combinedMonatsraten.map(function(monatsrate) {
-        return (<tr><td>{monatsrate.monthStart}</td><td>&nbsp;-&nbsp;</td><td>{monatsrate.monthEnd}</td><td>:&nbsp;</td><td><FormattedMessage message="{total, number, eur}" total={monatsrate.value} /></td></tr>);
+        return (
+            <tr>
+                <td>{monatsrate.monthStart}</td>
+                <td>&nbsp;-&nbsp;</td>
+                <td>{monatsrate.monthEnd}</td>
+                <td>:&nbsp;</td>
+                <td className={(maxMonatsrate && monatsrate.value > maxMonatsrate) ?'emphasize':''}><FormattedMessage message="{total, number, eur}" total={monatsrate.value} /></td>
+            </tr>
+        );
     })}</table>);
 };
 
@@ -95,19 +103,19 @@ var Angebotstabelle = React.createClass({
                 <DataRow className="deemphazise" title="Restschuld (expected)" variants={this.state.data} value={concatTermInput.bind(this,function(terms) {return terms.erwartet ? PriceFormat(terms.erwartet.restschuld) : undefined;})}/>
 
 <DataRow title="Getilgt" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.getilgt;}}/>
+
+<DataRow title="Kreditbetrag" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag;}}/>
  */    
     render: function () {
     return (
             <table className="angebote">
                 <DataRow title="Anschlussszenario" className="title" variants={this.props.data} value={function(variant) {return variant.input.terms.label;}}/>
-                <DataRow title="Kreditbetrag" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.betrag;}}/>
-                <DataRow className="emphazise" title="Monatsrate" variants={this.props.data} formatter={MonatsratenFormat} value={function(variant) {return variant.result.monatsraten;}}/>
+                
+                <DataRow title="Monatsrate" variants={this.props.data} formatter={MonatsratenFormat.bind(this, this.props.maxMonatsrate)} value={function(variant) {return variant.result.monatsraten;}}/>
                 <DataRow title="Restschuld" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.restschuld;}}/>
                 
-                
-                
-                <DataRow title="Kosten (absolut)" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.kosten;}}/>
-                <DataRow  title="Kosten (% vom getilgten)" variants={this.props.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
+                <DataRow className="deemphasize" title="Kosten (absolut)" variants={this.props.data} formatter={PriceFormat} value={function(variant) {return variant.result.kosten;}}/>
+                <DataRow className="deemphasize" title="Kosten (% vom getilgten)" variants={this.props.data} value={function(variant) {return variant.result.kostenProzentGetilgt + " %";}}/>
             </table>
           
     );
