@@ -183,7 +183,8 @@ var bausparvertrag = function(input) {
         monthlyValues: sparergebnis.monthlyValues.concat(kreditergebnis.monthlyValues),
         // FIXME: Monatrate array
         monatsrate: sparergebnis.monatsrate,
-        monatsraten: [{monthStart: 0, value: sparergebnis.monatsrate, monthEnd: 15*12}, {monthStart: 15*12, value: kreditergebnis.monatsrate, monthEnd: 30*12}],
+        monatsraten: [{monthStart: sparStartMonths, value: sparergebnis.monatsrate, monthEnd: sparStartMonths+sparMonths}, 
+                      {monthStart: creditStartMonths, value: kreditergebnis.monatsrate, monthEnd: creditStartMonths + laufzeitToMonths(kreditlaufzeit) }],
         restschuld: kreditergebnis.restschuld
     }
 };
@@ -222,7 +223,7 @@ var monatsrateFromRestschuld = function(betrag, sollzins, months, restschuld) {
         d += Math.pow(monatsSollzinsP, m);
     }
     var r = (betrag*Math.pow(monatsSollzinsP, months) - restschuld) / d;
-    console.log("(",betrag,"*Math.pow(",monatsSollzinsP,", ", months,") - ",restschuld,") / ",d,";", " => ", r);
+    //console.log("(",betrag,"*Math.pow(",monatsSollzinsP,", ", months,") - ",restschuld,") / ",d,";", " => ", r);
     return r;
 };
 

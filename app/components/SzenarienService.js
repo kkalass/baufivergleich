@@ -2,55 +2,6 @@
 
 var _ = require('underscore');
 
-var mkStdAnschlussSzenarien = function (params) {
-    var laufzeiten = params.laufzeit;
-    
-    var overrides = params.overrides;
-    
-    var mkKredite = function(kreditNames, laufzeiten, overrides, config) {
-        var r = {};
-        kreditNames.map(function(kreditName) {
-            r[kreditName] = _.defaults((laufzeiten[kreditNames] ? {laufzeit: laufzeiten[kreditNames]} : {}), (overrides?overrides[kreditName]: null) || {}, config || {});
-        });
-        return r;
-    };
-    
-    
-    var result= [
-     {
-         name: 'anschlussEquivalent',
-         label: "Equivalente Anschlussfinanzierung",
-         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussEquivalent'], {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 2.00})
-     },
-     {
-         name: 'anschlussExpected',
-         label: "Erwartete Anschlussfinanzierung (5%)",
-         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussExpected'], {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 5.00})
-     },
-     {
-         name: 'anschlussExpectedUngetilgt',
-         label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) => 30++ Jahre",
-         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussExpectedUngetilgt'], {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 5.00})
-     },
-     {
-         name: 'anschlussSehrSchlecht',
-         label: "Sehr schlechte Anschlussfinanzierung (12%)",
-         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussSehrSchlecht'], {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 12.00})
-     },
-     {
-         name: 'anschlussSehrSchlechtUngetilgt',
-         label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) ",
-         kredite: mkKredite(_.keys(laufzeiten), laufzeiten, overrides['anschlussSehrSchlechtUngetilgt'], {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 12.00})
-     },
-     {
-         name: 'anschlussNichts',
-         label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren)",
-         kredite: _.object(_.keys(laufzeiten).map(function(kreditName) {return [kreditName, null];}))
-     }
-     ];
-    return result;
-};
-
 var szenarien = [
 
     {
@@ -73,64 +24,24 @@ var szenarien = [
                 }
             }
         },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen',
-                kredite: {
-                    'hauptkredit': {
-                        /*
-                        tilgung: {
-                            monatsrate: 1200
-                        }, 
-                        extra: {
-                            // keine Extra-Tilgung
-                        },
-                        */
-                        anschluss: {
-                            'anschlussEquivalent': {
-                                // Hier kann man den Tilgungssatz des Anschlussszenarios ändern - wenn das notwendig ist für das Szenario
-                                /*
-                                tilgung: {
-                                    prozentStart: 8.825
-                                },*/
-                                
-                                // Auch die Extratilgungen im Anschlussszenario können gesteuert werden
-                                /* 
-                                extra: {
-                                    // keine Extra-Tilgung
-                                }
-                                */
-                            }
-                        }
-                    }
-                }
-            }
-        ],
         
-        anschlussSzenarien: mkStdAnschlussSzenarien(
-            {
-                laufzeit: {
-                    'hauptkredit': {jahre: 10}
-                },
-                'overrides': {
-                    'anschlussEquivalent': {
-                        'hauptkredit': {
-                            // you can override whatever you want
-                            /*
-                            tilgung: {
-                                prozentStart: 8.825
-                            },
-                            */
-                            sollzins: 2.47,
-                        }
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 10
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.47,
                     }
                 }
             }
-            
-        )
-   
-    },
-    {
+        }
+    }, {
         title: 'Creditweb 1280 EUR Monatsrate',
         
         hide: false,
@@ -150,26 +61,22 @@ var szenarien = [
                 }
             }
         },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-            }
-        ],
-        anschlussSzenarien: mkStdAnschlussSzenarien(
-            {
-                laufzeit: {
-                    'hauptkredit': {jahre: 10}
-                },
-                'overrides': {
-                    'anschlussEquivalent': {
-                        'hauptkredit': {
-                            sollzins: 2.47,
-                        }
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 10
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.47,
                     }
                 }
             }
-            
-        )
+        }
     },
     {
         title: 'Creditweb 3% Tilgung',
@@ -189,25 +96,22 @@ var szenarien = [
                 }
             }
         },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-            }
-        ],
-        anschlussSzenarien: mkStdAnschlussSzenarien(
-            {
-                laufzeit: {
-                    'hauptkredit': {jahre: 10}
-                },
-                'overrides': {
-                    'anschlussEquivalent': {
-                        'hauptkredit': {sollzins: 2.47,
-                        }
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 10
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.47,
                     }
                 }
             }
-            
-        )
+        }
    
     },
     {
@@ -226,56 +130,49 @@ var szenarien = [
                 sollzins: 2.25,
                 tilgung: {
                     prozentStart: 2.00
-                },
-                erwartet: {
-                    monatsrate: 956.25,
-                    restschuld: 173760.75,
-                    effektivzins: 2.27
                 }
             },
             "kfw": { 
                 label: "Haspa Annuitätendarlehen - KFW - Angebot vom 28.05.2015",
                 laufzeit: {jahre: 10},
-                startzeit: {monat: 6, jahr: 2015},
+                
+                startzeit: {
+                    monat: 6, 
+                    jahr: 2015
+                },
+                
                 betrag: 50000,
                 sollzins: 1.55,
                 tilgungVerzögerungMonate: 12, // 'Freijahre' in den Bedingungen - in dieser Zeit wird nicht getilgt
                 tilgung: {
                     prozentStart: 2.24
-                },
-                
-                erwartet: {
-                    monatsrate: 157.92,
-                    restschuld: 39190.17,
-                    effektivzins: 1.56
                 }
             }
         },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-                
-            }
-        ],
-        anschlussSzenarien: mkStdAnschlussSzenarien(
-            {
-                laufzeit: {
-                    'hauptkredit': {jahre: 15},
-                    'kfw': {jahre: 20}
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 15
+                    }
                 },
-                'overrides': {
-                    'anschlussEquivalent': {
-                        'kfw': {
-                            sollzins: 1.57
-                        },
-                        'hauptkredit': {
-                            sollzins: 2.47
-                        }
+                'kfw': {
+                    laufzeit: {
+                        jahre: 20
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'kfw': {
+                        sollzins: 1.57
+                    },
+                    'hauptkredit': {
+                        sollzins: 2.47
                     }
                 }
             }
-            
-        )
+        }
    
     },
     {
@@ -291,23 +188,7 @@ var szenarien = [
                     monatsrate: 1090
                 }
             }
-        },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-                
-            }
-        ],
-        anschlussSzenarien: [
-             {
-                 name: 'anschlussNichts',
-                 label: "Ohne Anschlussfinanzierung (KFW Restschuld nach 10 Jahren + Restschuld nach 15 Jahren",
-                 kredite: {
-                     'hauptkredit': null
-                 }
-             }
-        ]
-   
+        }
     },
     {
         title: 'Varianten Frau Herrmann 1 - 17.06.2015',
@@ -322,37 +203,266 @@ var szenarien = [
                 sollzins: 2.15,
                 tilgung: {
                     prozentStart: 2.5
-                },
-                
-                erwartet: {
-                    monatsrate: 1263.25,
-                    //restschuld: 153230,
-                    //effektivzins: 2.50
                 }
-                
             }
         },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-            }
-        ],
-        anschlussSzenarien: mkStdAnschlussSzenarien(
-            {
-                laufzeit: {
-                    'hauptkredit': {jahre: 15}
-                },
-                'overrides': {
-                    'anschlussEquivalent': {
-                        'hauptkredit': {
-                            sollzins: 2.15,
-                        }
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 15
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.15,
                     }
                 }
             }
-            
-        )
+        }
+
    
+    },
+    {
+        title: 'Variante Frau Herrmann 1 - 18.06.2015 - 40 Jahre',
+        hide: false,
+        bewertung: 'Sehr Schlecht',
+        // FIXME: Sondertilgungsszenarien mit einbauen - so hatte Frau Herrmann das wohl gemeint - das könnte uns etwas Flexibilität geben
+        begruendung: 'Sehr hohe Restschuld nach 20 Jahren , schon bei 5% ungetilgter Anschlussfinanzierung steigt die Monatsrate, sehr sehr hohes Risiko',
+        kredite: {
+            "hauptkredit" : {
+                laufzeit: {jahre: 20},
+                startzeit: {monat: 7, jahr: 2015},
+                betrag: 326000,
+                sollzins: 2.51,
+                tilgung: {
+                    prozentStart: 1
+                }
+            }
+        },
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 20
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.51,
+                    }
+                }
+            }
+        }
+        
+    },
+    {
+        title: 'Variante Frau Herrmann 2  - 18.06.2015 - Bausparkombi',
+        hide: false,
+        bewertung: 'Sehr Schlecht',
+
+        begruendung: 'Macht überhaupt keinen Sinn - war das überhaupt so gemeint? Ist mir etwas unklar',
+        kredite: {
+            
+            "hauptkredit" : {
+                laufzeit: {jahre: 20},
+                startzeit: {monat: 7, jahr: 2015},
+                betrag: 163000,
+                sollzins: 2.51,
+                tilgung: {
+                    prozentStart: 1
+                }
+            },
+            "bauspar" : {
+                type: "kredit",
+                laufzeit: {jahre: 15},
+                startzeit: {monat: 6, jahr: 2015},
+                betrag: 163000,
+                sollzins: 2.25,
+                tilgung: {
+                    prozentStart: 0
+                },
+               
+                abloesung: {
+                    
+                    type: "bauspar",
+                    gebuehr: {
+                        // FIXME: gebühren?
+                        abschluss: 0, 
+                        jahr: 0
+                    },
+                    
+                    betrag: 163000,
+                    sparphase: {
+                        laufzeit: {jahre: 15},
+                        monatsrate: 263.71,
+                        // FIXME: gibt es Zins?
+                        zins: 0.0
+                    },
+                    // FIXME: spare ich hier genug an?
+                    // FIXME: sind die Werte wirklich das was sie meinte?
+                    kreditphase: {
+                        laufzeit: {jahre: 15},
+                        tilgung: {
+                            restschuld: 0,
+                        },
+                        sollzins: 2.15
+                    }
+                }
+                
+            },
+        },
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 10
+                    }
+                },
+                'kfw': {
+                    laufzeit: {
+                        jahre: 20
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.51,
+                    }
+                }
+            }
+        }
+    },
+    {
+        title: 'Variante Frau Herrmann 3 - Konstantdarlehen - 18.06.2015 - 30 Jahre',
+        hide: false,
+        bewertung: 'Evtl. Machbar',
+        begruendung: 'Ähnlich dem Konstantdarlehen bei Creditweb, aber sehr viel bessere Konditionen. Habe allerdings starke Zweifel, dass sie die so realisieren kann.',
+        kredite: {
+            "hauptkredit" : {
+                laufzeit: {jahre: 20},
+                startzeit: {monat: 7, jahr: 2015},
+                betrag: 326000,
+                sollzins: 2.15,
+                tilgung: {
+                    prozentStart: 2.5
+                }
+            }
+        },
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 10
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.15,
+                    }
+                }
+            }
+        }
+        
+    },
+    {
+        title: 'Variante Frau Herrmann 4  - 18.06.2015 - Bauspar - 32 Jahre',
+        hide: false,
+        bewertung: 'Schlecht',
+
+        begruendung: 'Ganz so nicht so interessant, unklar. Laut mail wie folgt gedacht: Belastung 1. bis 3. Jahr monatlich 1.004,08 € - 4. bis 15. Jahr monatlich 1.304,08 € - Restlaufzeit monatlich 1.297,00 €',
+        kredite: {
+            "hauptkredit" : {
+                type: "kredit",
+                laufzeit: {jahre: 15},
+                startzeit: {monat: 6, jahr: 2015},
+                betrag: 326000,
+                sollzins: 2.15,
+                tilgung: {
+                    prozentStart: 0
+                },
+               
+                abloesung: {
+                    
+                    type: "bauspar",
+                    gebuehr: {
+                        // FIXME: gebühren?
+                        abschluss: 0, 
+                        jahr: 0
+                    },
+                    
+                    betrag: 326000,
+                    sparphase: {
+                        laufzeit: {jahre: 15},
+                        monatsrate: 420,
+                        // FIXME: gibt es Zins?
+                        zins: 0.0
+                    },
+                   
+                    kreditphase: {
+                        laufzeit: {jahre: 17},
+                        tilgung: {
+                            restschuld: 0,
+                        },
+                        sollzins: 2.35
+                    }
+                }
+                
+            },
+        }
+    },
+    {
+        title: 'Variante Frau Herrmann 5 -unsere variation  - 18.06.2015 - Bauspar - 32 Jahre',
+        hide: false,
+        bewertung: 'Evtl. Machbar',
+
+        begruendung: 'Das einzige echte voll getilgte Angebot, ich habe aber Zweifel an der Realisierbarkeit. Ausserdem fehlen Infos zu Gebühren und so.',
+        kredite: {
+            "hauptkredit" : {
+                type: "kredit",
+                laufzeit: {jahre: 15},
+                startzeit: {monat: 6, jahr: 2015},
+                betrag: 326000,
+                sollzins: 2.15,
+                tilgung: {
+                    prozentStart: 0
+                },
+               
+                abloesung: {
+                    
+                    type: "bauspar",
+                    gebuehr: {
+                        // FIXME: gebühren?
+                        abschluss: 0, 
+                        jahr: 0
+                    },
+                    
+                    betrag: 326000,
+                    sparphase: {
+                        laufzeit: {jahre: 15},
+                        monatsrate: 620,
+                        // FIXME: gibt es Zins?
+                        zins: 0.0
+                    },
+                   
+                    kreditphase: {
+                        laufzeit: {jahre: 17},
+                        tilgung: {
+                            restschuld: 0,
+                        },
+                        sollzins: 2.35
+                    }
+                }
+                
+            },
+        }
     },
     {
         title: 'Volksbank Stormarn 30 Jahre Volltilgung, 2.92 %',
@@ -370,21 +480,7 @@ var szenarien = [
                 }
                 
             }
-        },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-            }
-        ],
-        anschlussSzenarien: [
-             {
-                 name: 'anschlussNichts',
-                 label: " Anschlussfinanzierung nicht nötig, voll getilgt",
-                 kredite: {
-                     'hauptkredit': null
-                 }
-             }
-        ]
+        }
    
     },
     {
@@ -404,27 +500,23 @@ var szenarien = [
                 
             }
         },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-            }
-        ],
-        anschlussSzenarien: mkStdAnschlussSzenarien(
-            {
-                laufzeit: {
-                    'hauptkredit': {jahre: 15}
-                },
-                'overrides': {
-                    'anschlussEquivalent': {
-                        'hauptkredit': {
-                            sollzins: 2.92,
-                        }
+        anschlussSzenarien: {
+            'kredite': {
+                'hauptkredit': {
+                    laufzeit: {
+                        jahre: 15
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'hauptkredit': {
+                        sollzins: 2.92,
                     }
                 }
             }
+        }
             
-        )
-   
     },
     {
         title: 'Haspa Bauspar - Angebot vom 28.05.2015',
@@ -442,38 +534,32 @@ var szenarien = [
                 tilgung: {
                     prozentStart: 0
                 },
-                // FIXME: is this really the way to go?
+                
                 abloesung: {
                     label: "Haspa Bauspar - Angebot vom 28.05.2015",
                     type: "bauspar",
-                    gebuehr: {abschluss: 2700, jahr: 12},
+                    
+                    gebuehr: {
+                        abschluss: 2700, 
+                        jahr: 12
+                    },
+                    
                     betrag: 270000,
+                    
                     sparphase: {
                         laufzeit: {jahre: 15},
                         monatsrate: 623,
-                        zins: 0.25,
+                        zins: 0.25
                     },
+                    
                     kreditphase: {
                         laufzeit: {jahre: 15},
                         tilgung: {
                             monatsrate: 1080,
                         },
-                        sollzins: 2.95,
-                        
-                        erwartet: {
-                            monatsrate: 1080,
-                            restschuld: 0,
-                            effektivzins: 2.31
-                        }
+                        sollzins: 2.95
                     }
-                },
-                
-                erwartet: {
-                    monatsrate: 506.25,
-                    restschuld: 270000,
-                    effektivzins: 2.31
                 }
-                
             },
             "kfw": {
                 label: "Haspa Annuitätendarlehen - KFW - Angebot vom 28.05.2015",
@@ -484,36 +570,25 @@ var szenarien = [
                     prozentStart: 2.24
                 },
                 tilgungVerzögerungMonate: 12, // 'Freijahre' in den Bedingungen - in dieser Zeit wird nicht getilgt
-                sollzins: 1.55,
-                
-                erwartet: {
-                    monatsrate: 157.92,
-                    restschuld: 39190.17,
-                    effektivzins: 1.56
-                }
+                sollzins: 1.55
             }
         },
-        tilgungsSzenarien: [
-            {
-                title: 'Keine Extra-Tilgungen'
-            }
-        ],
-        anschlussSzenarien: mkStdAnschlussSzenarien(
-            {
-                laufzeit: {
-                    'kfw': {jahre: 20}
-                },
-                'overrides': {
-                    'anschlussEquivalent': {
-                        'kfw': {
-                            sollzins: 1.57
-                        }
+        anschlussSzenarien: {
+            'kredite': {
+                'kfw': {
+                    laufzeit: {
+                        jahre: 20
+                    }
+                }
+            },
+            'overrides': {
+                'anschlussEquivalent': {
+                    'kfw': {
+                        sollzins: 1.57
                     }
                 }
             }
-            
-        )
-   
+        }
     }
 ];
 
