@@ -8,27 +8,27 @@ var daten = {
             {
                 name: 'anschlussEquivalent',
                 label: "Equivalente Volltilgung",
-                defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 2.00}
+                defaultKreditTerms: {tilgung: {restschuld: 0}, sollzins: 2.00}
             },
             {
                 name: 'anschlussExpected',
                 label: "Erwartete Volltilgung (5%)",
-                defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 5.00}
+                defaultKreditTerms: {tilgung: {restschuld: 0}, sollzins: 5.00}
             },
             {
                 name: 'anschlussExpectedUngetilgt',
                 label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) ",
-                defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 5.00}
+                defaultKreditTerms: {tilgung: {prozentStart: 0}, sollzins: 5.00}
             },
             {
                 name: 'anschlussSehrSchlecht',
                 label: "Sehr schlechte Volltilgung (12%)",
-                defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 12.00}
+                defaultKreditTerms: {tilgung: {restschuld: 0}, sollzins: 12.00}
             },
             {
                 name: 'anschlussSehrSchlechtUngetilgt',
                 label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) ",
-                defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 12.00}
+                defaultKreditTerms: {tilgung: {prozentStart: 0}, sollzins: 12.00}
             },
             {
                 name: 'anschlussNichts',
