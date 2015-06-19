@@ -42,7 +42,7 @@ var daten = {
      {
          title: 'Creditweb 1200 EUR Monatsrate',
          
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Schlecht',
          begruendung: 'Erwarteter Zinssatz nicht mehr auf 0-Restschuld weiterführbar, Worst-Case-Zinssatz auch tilgungsfrei deutlich über Monatsrate, Equivalente Anschlussfinanzierung führt zu höherer Rate.',
          
@@ -80,7 +80,7 @@ var daten = {
      {
          title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 30 bis Volltilgung',
          
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Schlecht',
          begruendung: 'Nach 20 Jahren Rate selbst im besten Fall zu hoch - mit dieser Anfangsrate ist Volltilgung nicht in 30 Jahren machbar',
          
@@ -118,7 +118,7 @@ var daten = {
      {
          title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 40 bis Volltilgung',
          
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Schlecht',
          begruendung: 'Volltilgung  in 40 Jahren beim erwarteten Zinssatz machbar, aber bei 12% Zinsen nach 20 Jahren ist das Haus nicht mehr haltbar',
          
@@ -156,9 +156,9 @@ var daten = {
      {
          title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 30 bis Volltilgung - Unsere Variation mit höherer Monatsrate',
          
-         hide: false,
-         bewertung: '',
-         begruendung: '',
+         abgelehnt: false,
+         bewertung: 'Evtl. Machbar',
+         begruendung: 'Wie die vergleichbaren Angebote - z. B. von Creditweb - würde das prinzipiell funktionieren',
          
          kredite: {
              "hauptkredit" : {
@@ -177,7 +177,7 @@ var daten = {
              'kredite': {
                  'hauptkredit': {
                      laufzeit: {
-                         jahre: 20
+                         jahre: 10
                      }
                  }
              },
@@ -193,7 +193,7 @@ var daten = {
      {
          title: 'Creditweb 1280 EUR Monatsrate',
          
-         hide: false,
+         abgelehnt: false,
          bewertung: 'Evtl. Machbar',
          begruendung: 'Monatsrate zu hoch, aber Worst-Case-Zinssatz bei Tilgungsfreiheit unter der Monatsrate. Erwartete Anschlussfinanzierung führt zu etwas niedrigerer Anschluss-Rate.',
          
@@ -231,7 +231,7 @@ var daten = {
          title: 'Creditweb 3% Tilgung',
          bewertung: 'Schlecht',
          begruendung: 'Monatsraten mit ca. 1.450 EUR deutlich zu hoch. Vorteil: Geringe Restschuld nach 20 Jahren, selbst bei 12% problemlos',
-         hide: true,
+         abgelehnt: true,
          kredite: {
              "hauptkredit" : {
                  label: "Creditweb - focus.de rechner 16.06.2015",
@@ -266,7 +266,7 @@ var daten = {
      {
          title: 'Haspa Annuitäten',
          
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Sehr Schlecht',
          begruendung: 'Hängt extrem von Anschlussfinanzierung ab - selbst bei equivalenter Anschlussfinanzierung ist die Rate dann höher, bei 12% ist eine Zwangsversteigerung unausweichlich',
          
@@ -326,7 +326,7 @@ var daten = {
      },
      {
          title: 'Experimente Nicole',
-         hide: true, // temporär versteckt, ist Platzhalter für echte Alternativen
+         abgelehnt: true, // temporär versteckt, ist Platzhalter für echte Alternativen
          kredite: {
              "hauptkredit" : {
                  laufzeit: {jahre: 20},
@@ -341,7 +341,7 @@ var daten = {
      },
      {
          title: 'Varianten Frau Herrmann 1 - 17.06.2015',
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Sehr Schlecht',
          begruendung: 'Bei 12% auch tilgungsfrei sehr wahrscheinlich Zwangsversteigerung, bei erwarteter Anschlussfinanzierung nicht nach 30 Jahren getilgt',
          kredite: {
@@ -376,7 +376,7 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 1 - 18.06.2015 - 40 Jahre',
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Sehr Schlecht',
          // FIXME: Sondertilgungsszenarien mit einbauen - so hatte Frau Herrmann das wohl gemeint - das könnte uns etwas Flexibilität geben
          begruendung: 'Sehr hohe Restschuld nach 20 Jahren , schon bei 5% ungetilgter Anschlussfinanzierung steigt die Monatsrate, sehr sehr hohes Risiko',
@@ -411,7 +411,7 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 2  - 18.06.2015 - Bausparkombi',
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Sehr Schlecht',
 
          begruendung: 'Macht überhaupt keinen Sinn - war das überhaupt so gemeint? Ist mir etwas unklar',
@@ -489,7 +489,7 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 3 - Konstantdarlehen - 18.06.2015 - 30 Jahre',
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Evtl. machbar',
          begruendung: 'Ähnlich dem Konstantdarlehen bei Creditweb, ursprünglich hatte sie uns 2.15 angegeben, auf Nachfrage das aber auf 2.51 korrigiert',
          kredite: {
@@ -523,7 +523,7 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 4  - 18.06.2015 - Bauspar - 32 Jahre',
-         hide: false,
+         abgelehnt: false,
          bewertung: 'Schlecht',
 
          begruendung: 'Ganz so nicht so interessant, unklar. Laut mail wie folgt gedacht: Belastung 1. bis 3. Jahr monatlich 1.004,08 € - 4. bis 15. Jahr monatlich 1.304,08 € - Restlaufzeit monatlich 1.297,00 €',
@@ -569,7 +569,7 @@ var daten = {
      },
      {
          title: 'Variante Frau Herrmann 5 -unsere variation  - 18.06.2015 - Bauspar - 32 Jahre',
-         hide: false,
+         abgelehnt: false,
          bewertung: 'Evtl. Machbar',
 
          begruendung: 'Das einzige echte voll getilgte Angebot, ich habe aber Zweifel an der Realisierbarkeit. Ausserdem fehlen Infos zu Gebühren und so.',
@@ -615,7 +615,7 @@ var daten = {
      },
      {
          title: 'Volksbank Stormarn 30 Jahre Volltilgung, 2.92 %',
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Schlecht',
          begruendung: 'Rate zu hoch und würde sich eh nur lohnen, wenn der Zinssatz deutlich über dem von mir erwarteten liegen würde',
          kredite: {
@@ -634,7 +634,7 @@ var daten = {
      },
      {
          title: 'Volksbank Stormarn 30 Jahre mit Restschuld und niedriger Rate, 2.92 %',
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Sehr Schlecht',
          begruendung: 'Restschuld führt wieder zu Unsicherheit, bei 12% wäre wieder Zwangsvollstreckung wahrscheinlich ...',
          kredite: {
@@ -669,7 +669,7 @@ var daten = {
      },
      {
          title: 'Haspa Bauspar - Angebot vom 28.05.2015',
-         hide: true,
+         abgelehnt: true,
          bewertung: 'Schlecht',
          begruendung: 'Sowieso schon recht hohe Raten, obwohl nur der KFW-Kredit Unsicherheit bringt, könnte das Haus nach 10 Jahren bei 12% auch ohne Tilgung nicht mehr haltbar sein (!), Rate nach 10 Jahren auch im besten Fall über 1300',
          kredite: {

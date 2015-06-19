@@ -10,7 +10,7 @@ baufivergleichButton img {
     color: red;
 }
 
-.hidden-angebot {
+.angebot.abgelehnt {
     text-decoration: line-through;
     color: #ccc;   
 }

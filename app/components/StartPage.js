@@ -171,7 +171,7 @@ var unfoldScenario = function (szenarien, angebot) {
     
     return {
         title: title,
-        hide: angebot.hide,
+        abgelehnt: angebot.abgelehnt,
         bewertung: angebot.bewertung,
         begruendung: angebot.begruendung,
         szenarien: tilgungen.map(function(anschluss, kredite, tilgungszenario) {
@@ -220,14 +220,14 @@ var StartPage = React.createClass({
 
     getInitialState: function() {
         var data = Datenbank.get();
-        //var angebote = _.filter(data.angebote, FILTER_HIDDEN);
-        var angebote = data.angebote, FILTER_HIDDEN;
+
+        var angebote = data.angebote;
         
         var angeboteUnfolded = angebote.map(unfoldScenario.bind(this, data.szenarien));
         
         return {angebote: angeboteUnfolded.map(function (angebot) {
             return {
-                hide: angebot.hide,
+                abgelehnt: angebot.abgelehnt,
                 title: angebot.title,
                 bewertung: angebot.bewertung,
                 begruendung: angebot.begruendung,
@@ -242,13 +242,13 @@ var StartPage = React.createClass({
     return (
           <div className="container">
             {this.state.angebote.map(function(angebot) {
-                if (angebot.hide) {
-                    return (<div className="hidden-angebot">
-                        <h2><a href="#" title={angebot.begruendung}>{angebot.title}</a></h2>
+                if (angebot.abgelehnt) {
+                    return (<div className="angebot abgelehnt">
+                        <a href="#" title={angebot.begruendung}>{angebot.title}</a>
                     </div>);
                 }
                 return (
-                    <div>
+                    <div className="angebot">
                         <h2>{angebot.title}</h2>
                         <table>
                             <tr><th>Bewertung&nbsp;</th><td>{angebot.bewertung}</td></tr>
