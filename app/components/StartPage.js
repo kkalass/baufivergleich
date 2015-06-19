@@ -38,7 +38,7 @@ var Angebotstabelle = require("./Angebotstabelle");
 var _ = require("underscore");
 var Math2 = require("./math2");
 var Kreditrechner = require("./kreditrechner");
-var SzenarienService = require("./SzenarienService");
+var Datenbank = require("./Datenbank");
 
 
 var FILTER_HIDDEN = function(t) {return !t.hide;};
@@ -52,42 +52,7 @@ var overrideKreditTilgung = function (kredit, tilgungsOverride) {
     }
 };
 
-var mkStdAnschlussSzenarien = function (params) {
-    
-    
-    
-    var szenarien= [
-     {
-         name: 'anschlussEquivalent',
-         label: "Equivalente Volltilgung",
-         defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 2.00}
-     },
-     {
-         name: 'anschlussExpected',
-         label: "Erwartete Volltilgung (5%)",
-         defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 5.00}
-     },
-     {
-         name: 'anschlussExpectedUngetilgt',
-         label: "Erwartete Anschlussfinanzierung *UNGETILGT* (5%) ",
-         defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 5.00}
-     },
-     {
-         name: 'anschlussSehrSchlecht',
-         label: "Sehr schlechte Volltilgung (12%)",
-         defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {restschuld: 0}, sollzins: 12.00}
-     },
-     {
-         name: 'anschlussSehrSchlechtUngetilgt',
-         label: "Sehr schlechte Anschlussfinanzierung *UNGETILGT* (12%) ",
-         defaultKreditTerms: {laufzeit:{jahre: 10}, tilgung: {prozentStart: 0}, sollzins: 12.00}
-     },
-     {
-         name: 'anschlussNichts',
-         label: "Ohne Anschlussfinanzierung",
-         defaultKreditTerms: null
-     }
-     ];
+var mkStdAnschlussSzenarien = function (szenarien, params) {
     
     var kredite = params.kredite;
     //var laufzeiten = params.laufzeit;
@@ -135,11 +100,11 @@ var mkStdAnschlussSzenarien = function (params) {
             }
         }
  */
-var getAnschlussSzenarien = function (szenario) {
-    if (_.isArray(szenario.anschlussSzenarien)) {
-        return szenario.anschlussSzenarien;
-    } else if (_.isObject(szenario.anschlussSzenarien)) {
-        return mkStdAnschlussSzenarien(szenario.anschlussSzenarien);
+var getAnschlussSzenarien = function (szenarien, angebot) {
+    if (_.isArray(angebot.anschlussSzenarien)) {
+        return angebot.anschlussSzenarien;
+    } else if (_.isObject(angebot.anschlussSzenarien)) {
+        return mkStdAnschlussSzenarien(szenarien, angebot.anschlussSzenarien);
     }
     return [
             {
@@ -187,9 +152,9 @@ var getAnschlussSzenarien = function (szenario) {
             }
         ],
  */
-var getTilgungsSzenarien = function (szenario) {
-    if (_.isArray(szenario.tilgungsSzenarien)) {
-        return szenario.tilgungsSzenarien;
+var getTilgungsSzenarien = function (angebot) {
+    if (_.isArray(angebot.tilgungsSzenarien)) {
+        return angebot.tilgungsSzenarien;
     } 
     return [
            {
@@ -198,16 +163,16 @@ var getTilgungsSzenarien = function (szenario) {
        ];
 };
 
-var unfoldScenario = function (szenario) {
-    var anschluss = _.filter(getAnschlussSzenarien(szenario), FILTER_HIDDEN);
-    var tilgungen = _.filter(getTilgungsSzenarien(szenario), FILTER_HIDDEN);
-    var title = szenario.title;
-    var kredite = szenario.kredite;
+var unfoldScenario = function (szenarien, angebot) {
+    var anschluss = _.filter(getAnschlussSzenarien(szenarien.anschluss, angebot), FILTER_HIDDEN);
+    var tilgungen = _.filter(getTilgungsSzenarien(angebot), FILTER_HIDDEN);
+    var title = angebot.title;
+    var kredite = angebot.kredite;
     
     return {
         title: title,
-        bewertung: szenario.bewertung,
-        begruendung: szenario.begruendung,
+        bewertung: angebot.bewertung,
+        begruendung: angebot.begruendung,
         szenarien: tilgungen.map(function(anschluss, kredite, tilgungszenario) {
             var varianten = anschluss.map(function(a) {
                 return {
@@ -253,9 +218,10 @@ var StartPage = React.createClass({
     mixins: [Router.Navigation, ReactIntl.IntlMixin],
 
     getInitialState: function() {
-        var stored = _.filter(SzenarienService.getStoredScenarios(), FILTER_HIDDEN);
+        var data = Datenbank.get();
+        var angebote = _.filter(data.angebote, FILTER_HIDDEN);
         //var stored = SzenarienService.getStoredScenarios();
-        var szenarien = stored.map(unfoldScenario);
+        var szenarien = angebote.map(unfoldScenario.bind(this, data.szenarien));
         
         return {szenarien: szenarien.map(function (szenario) {
             return {
