@@ -76,7 +76,121 @@ var daten = {
                  }
              }
          }
-     }, {
+     },
+     {
+         title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 30 bis Volltilgung',
+         
+         hide: true,
+         bewertung: 'Schlecht',
+         begruendung: 'Nach 20 Jahren Rate selbst im besten Fall zu hoch - mit dieser Anfangsrate ist Volltilgung nicht in 30 Jahren machbar',
+         
+         kredite: {
+             "hauptkredit" : {
+                 label: "DSL Bank",
+                 laufzeit: {jahre: 20},
+                 startzeit: {monat: 7, jahr: 2015},
+                 betrag: 318000,
+                 sollzins: 2.41,
+                 // man könnte hier schon einen gemeinsamen Tilgungssatz angeben, wenn sich die Szenarien nur durch extra tilgung Unterscheiden
+                 tilgung: {
+                     prozentStart: 2.0
+                 }
+             }
+         },
+         
+         anschlussSzenarien: {
+             'kredite': {
+                 'hauptkredit': {
+                     laufzeit: {
+                         jahre: 10
+                     }
+                 }
+             },
+             'overrides': {
+                 'anschlussEquivalent': {
+                     'hauptkredit': {
+                         sollzins: 2.41
+                     }
+                 }
+             }
+         }
+     },
+     {
+         title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 40 bis Volltilgung',
+         
+         hide: true,
+         bewertung: 'Schlecht',
+         begruendung: 'Volltilgung  in 40 Jahren beim erwarteten Zinssatz machbar, aber bei 12% Zinsen nach 20 Jahren ist das Haus nicht mehr haltbar',
+         
+         kredite: {
+             "hauptkredit" : {
+                 label: "DSL Bank",
+                 laufzeit: {jahre: 20},
+                 startzeit: {monat: 7, jahr: 2015},
+                 betrag: 318000,
+                 sollzins: 2.41,
+                 // man könnte hier schon einen gemeinsamen Tilgungssatz angeben, wenn sich die Szenarien nur durch extra tilgung Unterscheiden
+                 tilgung: {
+                     prozentStart: 2.0
+                 }
+             }
+         },
+         
+         anschlussSzenarien: {
+             'kredite': {
+                 'hauptkredit': {
+                     laufzeit: {
+                         jahre: 20
+                     }
+                 }
+             },
+             'overrides': {
+                 'anschlussEquivalent': {
+                     'hauptkredit': {
+                         sollzins: 2.41
+                     }
+                 }
+             }
+         }
+     },
+     {
+         title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 30 bis Volltilgung - Unsere Variation mit höherer Monatsrate',
+         
+         hide: false,
+         bewertung: '',
+         begruendung: '',
+         
+         kredite: {
+             "hauptkredit" : {
+                 label: "DSL Bank",
+                 laufzeit: {jahre: 20},
+                 startzeit: {monat: 7, jahr: 2015},
+                 betrag: 318000,
+                 sollzins: 2.41,
+                 tilgung: {
+                     monatsrate: 1280
+                 }
+             }
+         },
+         
+         anschlussSzenarien: {
+             'kredite': {
+                 'hauptkredit': {
+                     laufzeit: {
+                         jahre: 20
+                     }
+                 }
+             },
+             'overrides': {
+                 'anschlussEquivalent': {
+                     'hauptkredit': {
+                         sollzins: 2.41
+                     }
+                 }
+             }
+         }
+     },
+     {
          title: 'Creditweb 1280 EUR Monatsrate',
          
          hide: false,

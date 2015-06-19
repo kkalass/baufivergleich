@@ -171,6 +171,7 @@ var unfoldScenario = function (szenarien, angebot) {
     
     return {
         title: title,
+        hide: angebot.hide,
         bewertung: angebot.bewertung,
         begruendung: angebot.begruendung,
         szenarien: tilgungen.map(function(anschluss, kredite, tilgungszenario) {
@@ -219,16 +220,18 @@ var StartPage = React.createClass({
 
     getInitialState: function() {
         var data = Datenbank.get();
-        var angebote = _.filter(data.angebote, FILTER_HIDDEN);
-        //var stored = SzenarienService.getStoredScenarios();
-        var szenarien = angebote.map(unfoldScenario.bind(this, data.szenarien));
+        //var angebote = _.filter(data.angebote, FILTER_HIDDEN);
+        var angebote = data.angebote, FILTER_HIDDEN;
         
-        return {szenarien: szenarien.map(function (szenario) {
+        var angeboteUnfolded = angebote.map(unfoldScenario.bind(this, data.szenarien));
+        
+        return {angebote: angeboteUnfolded.map(function (angebot) {
             return {
-                title: szenario.title,
-                bewertung: szenario.bewertung,
-                begruendung: szenario.begruendung,
-                tilgungszenarien: szenario.szenarien.map(function(child) {
+                hide: angebot.hide,
+                title: angebot.title,
+                bewertung: angebot.bewertung,
+                begruendung: angebot.begruendung,
+                tilgungszenarien: angebot.szenarien.map(function(child) {
                     return {title: child.title, werte: Kreditrechner.berechnen(child.werte)};
                 })
             }
@@ -238,16 +241,20 @@ var StartPage = React.createClass({
     render: function () {
     return (
           <div className="container">
-            {this.state.szenarien.map(function(szenario) {
+            {this.state.angebote.map(function(angebot) {
+                if (angebot.hide) {
+                    return (<div className="hidden-angebot">
+                        <h2><a href="#" title={angebot.begruendung}>{angebot.title}</a></h2>
+                    </div>);
+                }
                 return (
                     <div>
-                        <h2>{szenario.title}</h2>
+                        <h2>{angebot.title}</h2>
                         <table>
-                            <tr><th>Bewertung&nbsp;</th><td>{szenario.bewertung}</td></tr>
-                            <tr><th>Begründung&nbsp;</th><td>{szenario.begruendung}</td></tr>
-                            <tr><th>Verstecken&nbsp;</th><td>{szenario.hide?'Ja':'Nein'}</td></tr>
+                            <tr><th>Bewertung&nbsp;</th><td>{angebot.bewertung}</td></tr>
+                            <tr><th>Begründung&nbsp;</th><td>{angebot.begruendung}</td></tr>
                         </table>
-                        {szenario.tilgungszenarien.map(function (ts) {
+                        {angebot.tilgungszenarien.map(function (ts) {
                             return (
                                 <div>
                                 <h3>{ts.title}</h3>
