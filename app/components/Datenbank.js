@@ -116,11 +116,125 @@ var daten = {
          }
      },
      {
+         title: 'Interhyp - 19.06.2015 - DSL Bank - 20 Jahre gebunden, 32 bis Volltilgung',
+         
+         abgelehnt: true,
+         bewertung: '',
+         begruendung: '',
+         
+         kredite: {
+             "hauptkredit" : {
+                 label: "DSL Bank",
+                 laufzeit: {jahre: 20},
+                 startzeit: {monat: 7, jahr: 2015},
+                 betrag: 318000,
+                 sollzins: 2.54,
+                 // man könnte hier schon einen gemeinsamen Tilgungssatz angeben, wenn sich die Szenarien nur durch extra tilgung Unterscheiden
+                 tilgung: {
+                     prozentStart: 2.0
+                 }
+             }
+         },
+         
+         anschlussSzenarien: {
+             'kredite': {
+                 'hauptkredit': {
+                     laufzeit: {
+                         jahre: 12
+                     }
+                 }
+             },
+             'overrides': {
+                 'anschlussEquivalent': {
+                     'hauptkredit': {
+                         sollzins: 2.54
+                     }
+                 }
+             }
+         }
+     },
+     {
+         title: 'Interhyp - 19.06.2015 - DSL Bank - 20 Jahre gebunden, 32 bis Volltilgung - höhere Anfangstilgung',
+         
+         abgelehnt: false,
+         bewertung: 'Evtl. Machbar',
+         begruendung: 'Wie die vergleichbaren Angebote - z. B. von Creditweb - würde das prinzipiell funktionieren, ist aber noch etwas teurer',
+         
+         kredite: {
+             "hauptkredit" : {
+                 label: "DSL Bank",
+                 laufzeit: {jahre: 20},
+                 startzeit: {monat: 7, jahr: 2015},
+                 betrag: 318000,
+                 sollzins: 2.54,
+                 // man könnte hier schon einen gemeinsamen Tilgungssatz angeben, wenn sich die Szenarien nur durch extra tilgung Unterscheiden
+                 tilgung: {
+                     monatsrate: 1280
+                 }
+             }
+         },
+         
+         anschlussSzenarien: {
+             'kredite': {
+                 'hauptkredit': {
+                     laufzeit: {
+                         jahre: 12
+                     }
+                 }
+             },
+             'overrides': {
+                 'anschlussEquivalent': {
+                     'hauptkredit': {
+                         sollzins: 2.54
+                     }
+                 }
+             }
+         }
+     },
+     {
+         title: 'Interhyp - 19.06.2015 - Sparkasse Westholstein - 20 Jahre gebunden, 32 bis Volltilgung',
+         
+         abgelehnt: true,
+         bewertung: 'Schlecht',
+         begruendung: 'Bei erwartetem Szenario ist die Monatsrate im Anschluss zu hoch',
+         
+         kredite: {
+             "hauptkredit" : {
+                 label: "Sparkasse Westholstein",
+                 laufzeit: {jahre: 20},
+                 startzeit: {monat: 7, jahr: 2015},
+                 betrag: 318000,
+                 sollzins: 2.61,
+                 // man könnte hier schon einen gemeinsamen Tilgungssatz angeben, wenn sich die Szenarien nur durch extra tilgung Unterscheiden
+                 tilgung: {
+                     prozentStart: 2.0
+                 }
+             }
+         },
+         
+         anschlussSzenarien: {
+             'kredite': {
+                 'hauptkredit': {
+                     laufzeit: {
+                         jahre: 12
+                     }
+                 }
+             },
+             'overrides': {
+                 'anschlussEquivalent': {
+                     'hauptkredit': {
+                         sollzins: 2.61
+                     }
+                 }
+             }
+         }
+     },
+     {
          title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 40 bis Volltilgung',
          
          abgelehnt: true,
          bewertung: 'Schlecht',
-         begruendung: 'Volltilgung  in 40 Jahren beim erwarteten Zinssatz machbar, aber bei 12% Zinsen nach 20 Jahren ist das Haus nicht mehr haltbar',
+         begruendung: 'Veraltet. Volltilgung  in 40 Jahren beim erwarteten Zinssatz machbar, aber bei 12% Zinsen nach 20 Jahren ist das Haus nicht mehr haltbar',
          
          kredite: {
              "hauptkredit" : {
@@ -156,9 +270,9 @@ var daten = {
      {
          title: 'Interhyp - 28.05.2015 - DSL Bank - 20 Jahre gebunden, 30 bis Volltilgung - Unsere Variation mit höherer Monatsrate',
          
-         abgelehnt: false,
+         abgelehnt: true,
          bewertung: 'Evtl. Machbar',
-         begruendung: 'Wie die vergleichbaren Angebote - z. B. von Creditweb - würde das prinzipiell funktionieren',
+         begruendung: 'Veraltet. Wie die vergleichbaren Angebote - z. B. von Creditweb - würde das prinzipiell funktionieren',
          
          kredite: {
              "hauptkredit" : {
@@ -191,7 +305,7 @@ var daten = {
          }
      },
      {
-         title: 'Creditweb 1280 EUR Monatsrate',
+         title: 'Creditweb 1280 EUR Monatsrate, 32 Jahre bis Volltilgung',
          
          abgelehnt: false,
          bewertung: 'Evtl. Machbar',
@@ -214,7 +328,7 @@ var daten = {
              'kredite': {
                  'hauptkredit': {
                      laufzeit: {
-                         jahre: 10
+                         jahre: 12
                      }
                  }
              },
@@ -325,16 +439,38 @@ var daten = {
     
      },
      {
-         title: 'Experimente Nicole',
-         abgelehnt: true, // temporär versteckt, ist Platzhalter für echte Alternativen
+         title: 'Experimente Klas',
+         
+         abgelehnt: true,
+         bewertung: '',
+         begruendung: 'Was wäre wenn - kein realistisches Angebot.',
+         
          kredite: {
              "hauptkredit" : {
                  laufzeit: {jahre: 20},
                  startzeit: {monat: 7, jahr: 2015},
-                 betrag: 326000,
-                 sollzins: 2.47,
+                 betrag: 317000,
+                 sollzins: 1.9,
+                 // man könnte hier schon einen gemeinsamen Tilgungssatz angeben, wenn sich die Szenarien nur durch extra tilgung Unterscheiden
                  tilgung: {
-                     monatsrate: 1090
+                     //prozentStart: 2.5
+                     monatsrate: 1200
+                 }
+             }
+         },
+         anschlussSzenarien: {
+             'kredite': {
+                 'hauptkredit': {
+                     laufzeit: {
+                         jahre: 10
+                     }
+                 }
+             },
+             'overrides': {
+                 'anschlussEquivalent': {
+                     'hauptkredit': {
+                         sollzins: 1.9,
+                     }
                  }
              }
          }

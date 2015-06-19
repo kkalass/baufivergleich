@@ -182,6 +182,7 @@ var unfoldScenario = function (szenarien, angebot) {
         abgelehnt: angebot.abgelehnt,
         bewertung: angebot.bewertung,
         begruendung: angebot.begruendung,
+        kredite: kredite, 
         szenarien: tilgungen.map(function(anschluss, kredite, tilgungszenario) {
             var varianten = anschluss.map(function(a) {
                 return {
@@ -247,6 +248,7 @@ var StartPage = React.createClass({
                     title: angebot.title,
                     bewertung: angebot.bewertung,
                     begruendung: angebot.begruendung,
+                    kredite: angebot.kredite,
                     tilgungszenarien: angebot.szenarien.map(function(child) {
                         return {title: child.title, werte: Kreditrechner.berechnen(child.werte)};
                     })
@@ -268,10 +270,31 @@ var StartPage = React.createClass({
                 return (
                     <div className={angebot.abgelehnt ? "angebot abgelehnt" : "angebot"}>
                         <h2>{angebot.title}</h2>
+                        
+                        {_.map(angebot.kredite, function(kredit, kreditname) {
+                            if (kredit.type === 'bauspar') {
+                                return (<h3>BAUFSPAR</h3>);
+                            }
+                            return (
+                                <div>
+                                   {_.size(angebot.kredite) > 1 ? (<h4>{kreditname}</h4>): ''}
+                                   <table>
+                                       <tr><th>Sollzinsbindung&nbsp;</th><td>{kredit.laufzeit.jahre + " Jahre"}</td></tr>
+                                       <tr><th>Betrag&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={kredit.betrag} /></td></tr>
+                                       <tr><th>Sollzins&nbsp;</th><td>{kredit.sollzins} %</td></tr>
+                                       {kredit.tilgung.prozentStart ? (<tr><th>Anfangstilgung&nbsp;</th><td>{kredit.tilgung.prozentStart} %</td></tr>) : ''}
+                                       {kredit.tilgung.monatsrate ? (<tr><th>Monatsrate&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={kredit.tilgung.monatsrate} /></td></tr>) : ''}
+                                       {kredit.tilgung.restschuld ? (<tr><th>Restschuld&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={kredit.tilgung.restschuld} /></td></tr>) : ''}
+                                   </table>
+                               </div>
+                            );
+                        })}
+                        <br/>
                         <table>
                             <tr><th>Bewertung&nbsp;</th><td>{angebot.bewertung}</td></tr>
                             <tr><th>Begründung&nbsp;</th><td>{angebot.begruendung}</td></tr>
                         </table>
+
                         {angebot.tilgungszenarien.map(function (ts) {
                             return (
                                 <div>
