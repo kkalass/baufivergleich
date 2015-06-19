@@ -2,6 +2,11 @@ baufivergleichButton img {
     height: 1em;
 }
 
+h2 {
+    margin-top: 40pt;
+    padding-top: 20pt;
+    border-top: solid 1pt #ccc
+}
 .deemphasize {
     color: #ccc;
 }
