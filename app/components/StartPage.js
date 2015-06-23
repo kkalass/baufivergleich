@@ -222,6 +222,68 @@ var unfoldScenario = function (szenarien, angebot) {
     };
 };
 
+var Kreditinfo = React.createClass({
+    render: function () {
+        if (this.props.kredit.type === 'bauspar') {
+            return (<Bausparvertrag kredit={this.props.kredit} name={this.props.name}/>);
+        }
+        return (<Annuitaetendarlehen kredit={this.props.kredit} name={this.props.name}/>);
+    }
+});
+
+        
+var Bausparvertrag = React.createClass({
+    render: function () {
+        var sparphase = this.props.kredit.sparphase;
+        var kreditphase = this.props.kredit.kreditphase;
+        var tilgung = kreditphase.tilgung;
+        var gebuehr = this.props.kredit.gebuehr || {};
+        var betrag = this.props.kredit.betrag;
+        return (
+            <div className="kreditinfo bausparvertrag">
+               {this.props.name ? (<h4>{this.props.name}</h4>): ''}
+               <table >
+                   <tr><th>Typ&nbsp;</th><td>Bausparvertrag</td></tr>
+                   {betrag ? (<tr><th>Betrag&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={betrag} /></td></tr>) : ''}
+                   <tr><th>Laufzeit&nbsp;</th><td>{sparphase.laufzeit.jahre + ' Jahre + ' + kreditphase.laufzeit.jahre + " Jahre"}</td></tr>
+                   
+                   {gebuehr.jahr ? (<tr><th>Gebühr pro Jahr&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={gebuehr.jahr} /></td></tr>) : ''}
+                   {gebuehr.abschluss ? (<tr><th>Gebühr einmalig&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={gebuehr.abschluss} /></td></tr>) : ''}
+                   {sparphase.monatsrate ? (<tr><th>Sparphase Monatsrate&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={sparphase.monatsrate} /></td></tr>) : ''}
+                   {sparphase.zins ? (<tr><th>Sparphase Zinsen&nbsp;</th><td>{sparphase.zins} %</td></tr>) : ''}
+                   
+                   <tr><th>Darlehen Sollzins&nbsp;</th><td>{kreditphase.sollzins} %</td></tr>
+                   {!_.isUndefined(tilgung.prozentStart) ? (<tr><th>Darlehen Anfangstilgung&nbsp;</th><td>{tilgung.prozentStart} %</td></tr>) : ''}
+                   {!_.isUndefined(tilgung.monatsrate) ? (<tr><th>Darlehen Monatsrate Darlehen&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={tilgung.monatsrate} /></td></tr>) : ''}
+                   
+                   {!_.isUndefined(tilgung.restschuld) ? (<tr><th>Darlehen Restschuld&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={tilgung.restschuld} /></td></tr>) : ''}
+               </table>
+           </div>
+        );
+    }
+});
+
+var Annuitaetendarlehen = React.createClass({
+    render: function () {
+        var tilgung = this.props.kredit.tilgung;
+        return (
+            <div className="kreditinfo annuitaet">
+               {this.props.name ? (<h4>{this.props.name}</h4>): ''}
+               <table>
+                   <tr><th>Typ&nbsp;</th><td>Annuitätendarlehen</td></tr>
+                   <tr><th>Sollzinsbindung&nbsp;</th><td>{this.props.kredit.laufzeit.jahre + " Jahre"}</td></tr>
+                   <tr><th>Betrag&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={this.props.kredit.betrag} /></td></tr>
+                   <tr><th>Sollzins&nbsp;</th><td>{this.props.kredit.sollzins} %</td></tr>
+                   {!_.isUndefined(tilgung.prozentStart) ? (<tr><th>Anfangstilgung&nbsp;</th><td>{tilgung.prozentStart} %</td></tr>) : ''}
+                   {!_.isUndefined(tilgung.monatsrate) ? (<tr><th>Monatsrate&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={tilgung.monatsrate} /></td></tr>) : ''}
+                   {!_.isUndefined(tilgung.restschuld) ? (<tr><th>Restschuld&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={tilgung.restschuld} /></td></tr>) : ''}
+                   {this.props.kredit.abloesung ? (<tr><th>Ablösung durch&nbsp;</th><td><Kreditinfo className="abloesung" kredit={this.props.kredit.abloesung} /></td></tr>) : ''}
+               </table>
+           </div>
+        );
+    }
+});
+
 var StartPage = React.createClass({
     // Note that each Page must include the IntlMixin, otherwise the i18n data
     // doesn't get passed down
@@ -272,25 +334,10 @@ var StartPage = React.createClass({
                         <h2>{angebot.title}</h2>
                         
                         {_.map(angebot.kredite, function(kredit, kreditname) {
-                            if (kredit.type === 'bauspar') {
-                                return (<h3>BAUFSPAR</h3>);
-                            }
-                            return (
-                                <div>
-                                   {_.size(angebot.kredite) > 1 ? (<h4>{kreditname}</h4>): ''}
-                                   <table>
-                                       <tr><th>Sollzinsbindung&nbsp;</th><td>{kredit.laufzeit.jahre + " Jahre"}</td></tr>
-                                       <tr><th>Betrag&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={kredit.betrag} /></td></tr>
-                                       <tr><th>Sollzins&nbsp;</th><td>{kredit.sollzins} %</td></tr>
-                                       {kredit.tilgung.prozentStart ? (<tr><th>Anfangstilgung&nbsp;</th><td>{kredit.tilgung.prozentStart} %</td></tr>) : ''}
-                                       {kredit.tilgung.monatsrate ? (<tr><th>Monatsrate&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={kredit.tilgung.monatsrate} /></td></tr>) : ''}
-                                       {kredit.tilgung.restschuld ? (<tr><th>Restschuld&nbsp;</th><td><FormattedMessage message="{total, number, eur}" total={kredit.tilgung.restschuld} /></td></tr>) : ''}
-                                   </table>
-                               </div>
-                            );
+                            return (<Kreditinfo kredit={kredit} name={_.size(angebot.kredite)>1?kreditname:''}/>);
                         })}
                         <br/>
-                        <table>
+                        <table className="angebotBewertung">
                             <tr><th>Bewertung&nbsp;</th><td>{angebot.bewertung}</td></tr>
                             <tr><th>Begründung&nbsp;</th><td>{angebot.begruendung}</td></tr>
                         </table>

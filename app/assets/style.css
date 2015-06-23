@@ -20,6 +20,12 @@ h2 {
     color: #ccc;   
 }
 
+.angebotBewertung th, .kreditinfo  th {
+    width: 120pt;
+    font-style: italic;
+    font-weight: normal;
+    vertical-align: top;
+}
 table.angebote >tbody> tr > td {
     padding: 10pt;
     border-left: black solid 1pt;

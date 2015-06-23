@@ -39,6 +39,52 @@ var daten = {
   },
   
   angebote: [
+    {
+        title: 'Eigene Kombi: Bauspar über 250TE',
+        abgelehnt: false,
+        bewertung: '',
+        begruendung: 'Sehr viele Annahmen, keine konkrete Angebote. u. a. Annahme, dass wir nur 25% Mindestsparguthaben bei der Ablösung brauchen. Und Annahme, dass meine Rechnung einigermassen korrekt ist...',
+        kredite: {
+            "hauptkredit" : {
+                label: "Bauspar Hypoathekendarlehen S",
+                type: "kredit",
+                laufzeit: {jahre: 15},
+                startzeit: {monat: 6, jahr: 2015},
+                betrag: 316000,
+                sollzins: 2.15,
+                tilgung: {
+                    restschuld: 250000
+                },
+                
+                abloesung: {
+                    label: "Bauspar Schwäbisch Hall",
+                    type: "bauspar",
+                    
+                    gebuehr: {
+                        abschluss: 2500, 
+                        //jahr: 12
+                    },
+                    
+                    betrag: 250000,
+                    
+                    sparphase: {
+                        laufzeit: {jahre: 15},
+                        //monatsrate: 700, // bei 50% Mindestsparguthaben
+                        monatsrate: 570, // bei 25% Mindestsparguthaben
+                        zins: 0.25
+                    },
+                    
+                    kreditphase: {
+                        laufzeit: {jahre: 17},
+                        tilgung: {
+                            restschuld: 0,
+                        },
+                        sollzins: 2.35
+                    }
+                }
+            }
+        }
+    },
      {
          title: 'Creditweb 1200 EUR Monatsrate',
          
@@ -660,7 +706,7 @@ var daten = {
      {
          title: 'Variante Frau Herrmann 4  - 18.06.2015 - Bauspar - 32 Jahre',
          abgelehnt: false,
-         bewertung: 'Schlecht',
+         bewertung: 'Machbar',
 
          begruendung: 'Ganz so nicht so interessant, unklar. Laut mail wie folgt gedacht: Belastung 1. bis 3. Jahr monatlich 1.004,08 € - 4. bis 15. Jahr monatlich 1.304,08 € - Restlaufzeit monatlich 1.297,00 €',
          kredite: {
@@ -730,6 +776,52 @@ var daten = {
                      },
                      
                      betrag: 326000,
+                     sparphase: {
+                         laufzeit: {jahre: 15},
+                         monatsrate: 620,
+                         // FIXME: gibt es Zins?
+                         zins: 0.0
+                     },
+                    
+                     kreditphase: {
+                         laufzeit: {jahre: 17},
+                         tilgung: {
+                             restschuld: 0,
+                         },
+                         sollzins: 2.35
+                     }
+                 }
+                 
+             },
+         }
+     },
+     {
+         title: 'Variante Frau Herrmann 5b -unsere variation  - 18.06.2015 - Bauspar - 32 Jahre - mehr eigenkapital',
+         abgelehnt: false,
+         bewertung: 'Evtl. Machbar',
+
+         begruendung: 'Das einzige echte voll getilgte Angebot, ich habe aber Zweifel an der Realisierbarkeit. Ausserdem fehlen Infos zu Gebühren und so.',
+         kredite: {
+             "hauptkredit" : {
+                 type: "kredit",
+                 laufzeit: {jahre: 15},
+                 startzeit: {monat: 6, jahr: 2015},
+                 betrag: 316000,
+                 sollzins: 2.15,
+                 tilgung: {
+                     prozentStart: 0
+                 },
+                
+                 abloesung: {
+                     
+                     type: "bauspar",
+                     gebuehr: {
+                         // FIXME: gebühren?
+                         abschluss: 0, 
+                         jahr: 0
+                     },
+                     
+                     betrag: 316000,
                      sparphase: {
                          laufzeit: {jahre: 15},
                          monatsrate: 620,
